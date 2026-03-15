@@ -217,26 +217,28 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
     if (accessToken != null) {
       await SecureStorage().storage.write(
-        key: SecureStorageKey.githubAccessToken,
+        key: SecureStorageKey.githubAccessToken.name,
         value: accessToken,
       );
     }
     await SecureStorage().storage.write(
-      key: SecureStorageKey.githubLogin,
+      key: SecureStorageKey.githubLogin.name,
       value: login,
     );
     await SecureStorage().storage.write(
-      key: SecureStorageKey.githubName,
+      key: SecureStorageKey.githubName.name,
       value: name ?? '',
     );
   }
 
   Future<void> _clearStoredUser() async {
     await SecureStorage().storage.delete(
-      key: SecureStorageKey.githubAccessToken,
+      key: SecureStorageKey.githubAccessToken.name,
     );
-    await SecureStorage().storage.delete(key: SecureStorageKey.githubLogin);
-    await SecureStorage().storage.delete(key: SecureStorageKey.githubName);
+    await SecureStorage().storage.delete(
+      key: SecureStorageKey.githubLogin.name,
+    );
+    await SecureStorage().storage.delete(key: SecureStorageKey.githubName.name);
   }
 
   String _displayLogin(User user) {

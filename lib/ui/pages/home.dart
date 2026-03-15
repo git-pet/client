@@ -26,10 +26,14 @@ class _HomePageState extends State<HomePage> {
     try {
       await Supabase.instance.client.auth.signOut();
       await SecureStorage().storage.delete(
-        key: SecureStorageKey.githubAccessToken,
+        key: SecureStorageKey.githubAccessToken.name,
       );
-      await SecureStorage().storage.delete(key: SecureStorageKey.githubLogin);
-      await SecureStorage().storage.delete(key: SecureStorageKey.githubName);
+      await SecureStorage().storage.delete(
+        key: SecureStorageKey.githubLogin.name,
+      );
+      await SecureStorage().storage.delete(
+        key: SecureStorageKey.githubName.name,
+      );
       if (!mounted) {
         return;
       }
@@ -38,9 +42,9 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그아웃에 실패하였습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('로그아웃에 실패하였습니다.')));
     } finally {
       if (mounted) {
         setState(() {
