@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:client/config/app_env.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,21 +15,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
-  static const _supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'http://118.34.15.14:8000',
-  );
-  static const _supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyIjoic3VwYWJhc2UiLCJpYXQiOjE3NzE3NTYyNjYsImV4cCI6MTkyOTQzNjI2Nn0.bPqPxAxyr07K20NTVcaM17k8vZeMvX_ae8xr1oR3bKc',
-  );
-  static const _redirectUrl = String.fromEnvironment(
-    'SUPABASE_REDIRECT_URL',
-    defaultValue: 'com.example.client://login-callback/',
-  );
   static final _isSupabaseConfigured =
-      _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty;
+      AppEnv.supabaseUrl.isNotEmpty &&
+      AppEnv.supabaseAnonKey.isNotEmpty &&
+      AppEnv.supabaseRedirectUrl.isNotEmpty;
 
   SupabaseClient? _supabase;
   StreamSubscription<AuthState>? _authSubscription;
@@ -146,7 +136,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     try {
       final launched = await _supabase!.auth.signInWithOAuth(
         OAuthProvider.github,
-        redirectTo: _redirectUrl,
+        redirectTo: AppEnv.supabaseRedirectUrl,
         scopes: 'read:user user:email',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );

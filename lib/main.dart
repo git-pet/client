@@ -1,26 +1,19 @@
-﻿import 'package:client/ui/pages/splash.dart';
+﻿import 'package:client/config/app_env.dart';
+import 'package:client/ui/pages/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const _supabaseUrl = String.fromEnvironment(
-  'SUPABASE_URL',
-  defaultValue: 'http://118.34.15.14:8000',
-);
-const _supabaseAnonKey = String.fromEnvironment(
-  'SUPABASE_ANON_KEY',
-  defaultValue:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzcxNzU2MjY2LCJleHAiOjE5Mjk0MzYyNjZ9.bPqPxAxyr07K20NTVcaM17k8vZeMvX_ae8xr1oR3bKc',
-);
-final _hasSupabaseConfig =
-    _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty;
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (_hasSupabaseConfig) {
+  await AppEnv.load();
+
+  final hasSupabaseConfig =
+      AppEnv.supabaseUrl.isNotEmpty && AppEnv.supabaseAnonKey.isNotEmpty;
+  if (hasSupabaseConfig) {
     await Supabase.initialize(
-      url: _supabaseUrl,
-      anonKey: _supabaseAnonKey,
+      url: AppEnv.supabaseUrl,
+      anonKey: AppEnv.supabaseAnonKey,
       authOptions: const FlutterAuthClientOptions(
         authFlowType: AuthFlowType.pkce,
       ),
