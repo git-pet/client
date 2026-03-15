@@ -1,10 +1,12 @@
+import 'package:client/ui/pages/home.dart';
 import 'package:client/ui/pages/intro.dart';
 import 'package:client/ui/pages/login.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-enum _Phase { splash, intro, login }
+enum _Phase { splash, intro, login, home }
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -35,9 +37,18 @@ class _SplashScreenState extends State<SplashScreen>
     final introSeen =
         await SecureStorage().storage.read(key: SecureStorageKey.introSeen) ==
         'true';
+    final session = Supabase.instance.client.auth.currentSession;
+    final githubAccessToken = await SecureStorage().storage.read(
+      key: SecureStorageKey.githubAccessToken,
+    );
     if (!mounted) return;
     setState(() {
-      _phase = introSeen ? _Phase.login : _Phase.intro;
+      if ((session?.accessToken.isNotEmpty ?? false) ||
+          (githubAccessToken != null && githubAccessToken.isNotEmpty)) {
+        _phase = _Phase.home;
+      } else {
+        _phase = introSeen ? _Phase.login : _Phase.intro;
+      }
     });
   }
 
@@ -47,6 +58,24 @@ class _SplashScreenState extends State<SplashScreen>
       value: 'true',
     );
     if (!mounted) return;
+    setState(() {
+      _phase = _Phase.login;
+    });
+  }
+
+  void _handleLoginSuccess() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _phase = _Phase.home;
+    });
+  }
+
+  void _handleLogout() {
+    if (!mounted) {
+      return;
+    }
     setState(() {
       _phase = _Phase.login;
     });
@@ -64,7 +93,9 @@ class _SplashScreenState extends State<SplashScreen>
       case _Phase.intro:
         return IntroPage(onComplete: _handleIntroCompleted);
       case _Phase.login:
-        return const LoginPage();
+        return LoginPage(onLoginSuccess: _handleLoginSuccess);
+      case _Phase.home:
+        return HomePage(onLogout: _handleLogout);
       case _Phase.splash:
         return Scaffold(
           body: Center(

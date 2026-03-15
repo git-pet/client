@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.onLoginSuccess});
+
+  final VoidCallback? onLoginSuccess;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -19,7 +21,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   static const _supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
     defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzcxNzU2MjY2LCJleHAiOjE5Mjk0MzYyNjZ9.bPqPxAxyr07K20NTVcaM17k8vZeMvX_ae8xr1oR3bKc',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyIjoic3VwYWJhc2UiLCJpYXQiOjE3NzE3NTYyNjYsImV4cCI6MTkyOTQzNjI2Nn0.bPqPxAxyr07K20NTVcaM17k8vZeMvX_ae8xr1oR3bKc',
   );
   static const _redirectUrl = String.fromEnvironment(
     'SUPABASE_REDIRECT_URL',
@@ -31,9 +33,11 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   SupabaseClient? _supabase;
   StreamSubscription<AuthState>? _authSubscription;
   Timer? _oauthResumeTimer;
+  Timer? _oauthFailureTimer;
   bool _isSubmitting = false;
   bool _awaitingOAuthResult = false;
   bool _didLeaveAppForOAuth = false;
+  bool _didNotifyLoginSuccess = false;
   String? _statusMessage;
   User? _currentUser;
 
@@ -42,14 +46,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     if (!_isSupabaseConfigured) {
-      _statusMessage =
-          'SUPABASE_URL, SUPABASE_ANON_KEY를 --dart-define로 전달해야 합니다.';
+      _statusMessage = '';
       return;
     }
 
     _supabase = Supabase.instance.client;
     _currentUser = _supabase!.auth.currentUser;
     _persistUser(_currentUser);
+    _notifyLoginSuccessIfNeeded();
     _authSubscription = _supabase!.auth.onAuthStateChange.listen((data) async {
       switch (data.event) {
         case AuthChangeEvent.signedIn:
@@ -66,6 +70,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 ? null
                 : 'GitHub 로그인 완료: @${_displayLogin(_currentUser!)}';
           });
+          _notifyLoginSuccessIfNeeded();
           break;
         case AuthChangeEvent.signedOut:
           await _clearStoredUser();
@@ -74,6 +79,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           }
           setState(() {
             _currentUser = null;
+            _didNotifyLoginSuccess = false;
             _resetOAuthFlow();
             _statusMessage = '로그아웃되었습니다.';
           });
@@ -89,6 +95,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _authSubscription?.cancel();
     _oauthResumeTimer?.cancel();
+    _oauthFailureTimer?.cancel();
     super.dispose();
   }
 
@@ -111,9 +118,10 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           return;
         }
         if (_supabase?.auth.currentSession != null) {
+          _resetOAuthFlow();
           return;
         }
-        _handleLoginFailure();
+        _scheduleOAuthFailureCheck();
       });
     }
   }
@@ -140,6 +148,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
         OAuthProvider.github,
         redirectTo: _redirectUrl,
         scopes: 'read:user user:email',
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
 
       if (!launched) {
@@ -163,9 +172,37 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   void _resetOAuthFlow() {
     _oauthResumeTimer?.cancel();
+    _oauthFailureTimer?.cancel();
     _isSubmitting = false;
     _awaitingOAuthResult = false;
     _didLeaveAppForOAuth = false;
+  }
+
+  void _scheduleOAuthFailureCheck() {
+    _oauthFailureTimer?.cancel();
+    _oauthFailureTimer = Timer(const Duration(seconds: 4), () {
+      if (!mounted || !_awaitingOAuthResult) {
+        return;
+      }
+      if (_supabase?.auth.currentSession != null) {
+        _resetOAuthFlow();
+        return;
+      }
+      _handleLoginFailure();
+    });
+  }
+
+  void _notifyLoginSuccessIfNeeded() {
+    if (_currentUser == null || _didNotifyLoginSuccess) {
+      return;
+    }
+    _didNotifyLoginSuccess = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      widget.onLoginSuccess?.call();
+    });
   }
 
   void _handleLoginFailure([String message = '로그인에 실패하였습니다']) {
