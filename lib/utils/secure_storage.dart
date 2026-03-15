@@ -13,4 +13,7 @@ class SecureStorage {
 
 class SecureStorageKey {
   static const introSeen = 'intro_seen';
+  static const githubAccessToken = 'github_access_token';
+  static const githubLogin = 'github_login';
+  static const githubName = 'github_name';
 }
