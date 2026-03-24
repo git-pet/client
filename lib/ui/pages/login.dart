@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:client/config/app_env.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
@@ -266,88 +267,171 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final user = _currentUser;
     final login = user == null ? null : _displayLogin(user);
     final name = user == null ? null : _displayName(user);
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'GitHub Login',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/cat_pixel.png',
+                  width: 120,
+                  height: 120,
+                  filterQuality: FilterQuality.medium,
+                ),
+                const SizedBox(height: 20),
+
+                Text(
+                  'GitPet',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Supabase Auth로 GitHub 계정을 연결합니다.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '커밋할수록 자라나는, 나만의 작은 펫',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white38,
                   ),
-                  if (user != null) ...[
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            '@$login',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          if (name != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              name,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
+                ),
+
+                if (user != null) ...[
                   const SizedBox(height: 24),
-                  ElevatedButton.icon(
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.github,
+                          size: 24,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                login ?? '',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              if (name != null)
+                                Text(
+                                  name,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.white38,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '연결됨',
+                            style: TextStyle(
+                              color: colors.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 28),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: FilledButton(
                     onPressed: _isSubmitting || !_isSupabaseConfigured
                         ? null
                         : _signInWithGithub,
-                    icon: _isSubmitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.code),
-                    label: Text(
-                      _isSubmitting ? 'GitHub 연결 중...' : 'GitHub로 로그인',
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF1B1F23),
+                      disabledBackgroundColor: Colors.white24,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF1B1F23),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              FaIcon(
+                                FontAwesomeIcons.github,
+                                size: 20,
+                                color: const Color(0xFF1B1F23),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'GitHub로 계속하기',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+
+                if (_statusMessage != null) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    _statusMessage!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white30,
                     ),
                   ),
-                  if (_statusMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      _statusMessage!,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
           ),
         ),
