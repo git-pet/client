@@ -2,6 +2,7 @@ import 'package:client/ui/pages/home.dart';
 import 'package:client/ui/pages/intro.dart';
 import 'package:client/ui/pages/login.dart';
 import 'package:client/utils/secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -34,11 +35,11 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _resolvePhase() async {
-    final introSeen =
+    final introSeen = kDebugMode ? false : (
         await SecureStorage().storage.read(
           key: SecureStorageKey.introSeen.name,
         ) ==
-        'true';
+        'true');
     final session = Supabase.instance.client.auth.currentSession;
     final githubAccessToken = await SecureStorage().storage.read(
       key: SecureStorageKey.githubAccessToken.name,
