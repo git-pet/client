@@ -1,4 +1,7 @@
+import 'package:client/models/pet.dart';
+import 'package:client/ui/widgets/sprite_animator.dart';
 import 'package:client/utils/secure_storage.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,6 +20,12 @@ class _HomePageState extends State<HomePage> {
   bool _isLoggingOut = false;
   int _selectedTabIndex = 0;
   bool _isTabPanelExpanded = false;
+
+  // Pet state
+  PetType _petType = PetType.classicalCat;
+  PetMood _mood = PetMood.idle;
+
+  SpriteInfo get _sprite => petSprites[_petType]![_mood]!;
 
   Future<void> _logout() async {
     if (_isLoggingOut) {
@@ -56,6 +65,118 @@ class _HomePageState extends State<HomePage> {
         });
       }
     }
+  }
+
+  Future<void> _showPetSelector() async {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.6,
+            minChildSize: 0.3,
+            maxChildSize: 0.85,
+            expand: false,
+            builder: (context, scrollController) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      '펫 선택 (Debug)',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: PetType.values.length,
+                        itemBuilder: (context, index) {
+                          final pet = PetType.values[index];
+                          final selected = pet == _petType;
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            leading: Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? colors.primary.withValues(alpha: 0.25)
+                                    : colors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Icon(
+                                Icons.pets_rounded,
+                                color: selected
+                                    ? colors.primary
+                                    : Colors.white54,
+                              ),
+                            ),
+                            title: Text(
+                              pet.displayName,
+                              style: TextStyle(
+                                color: selected
+                                    ? colors.primary
+                                    : Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${pet.frameSize}px',
+                              style: const TextStyle(color: Colors.white38),
+                            ),
+                            trailing: selected
+                                ? Icon(
+                                    Icons.check_circle_rounded,
+                                    color: colors.primary,
+                                  )
+                                : null,
+                            onTap: () {
+                              setState(() {
+                                _petType = pet;
+                                _mood = PetMood.idle;
+                              });
+                              Navigator.of(sheetContext).pop();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _openSettings() async {
@@ -102,6 +223,43 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                if (kDebugMode) ...[
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    leading: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(Icons.pets_rounded, color: colors.primary),
+                    ),
+                    title: const Text(
+                      '펫 변경 (Debug)',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _petType.displayName,
+                      style: const TextStyle(color: Colors.white54),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white38,
+                    ),
+                    onTap: () async {
+                      Navigator.of(sheetContext).pop();
+                      await _showPetSelector();
+                    },
+                  ),
+                  const Divider(color: Colors.white12),
+                ],
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 4,
@@ -243,60 +401,63 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                     ),
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          top: -20,
-                                          right: -20,
-                                          child: _GlowOrb(
-                                            size: 110,
-                                            color: colors.secondary.withValues(
-                                              alpha: 0.16,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(24),
+                                      child: Stack(
+                                        children: [
+                                          // Background image
+                                          Positioned.fill(
+                                            child: Image.asset(
+                                              'assets/images/backgrounds/Classic/1.png',
+                                              fit: BoxFit.cover,
+                                              filterQuality: FilterQuality.none,
                                             ),
                                           ),
-                                        ),
-                                        Positioned(
-                                          bottom: 20,
-                                          left: 18,
-                                          child: _GlowOrb(
-                                            size: 80,
-                                            color: colors.primary.withValues(
-                                              alpha: 0.14,
+                                          // Pet sprite
+                                          Center(
+                                            child: SpriteAnimator(
+                                              assetPath: _petType.spritePath(
+                                                _sprite.fileName,
+                                              ),
+                                              frameCount: _sprite.frameCount,
+                                              size: _petType.frameSize <= 16
+                                                  ? 64
+                                                  : 96,
+                                              fps: 6,
                                             ),
                                           ),
-                                        ),
-                                        Center(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                'Pet Room',
+                                          // Debug mood selector
+                                          if (kDebugMode)
+                                            Positioned(
+                                              bottom: 8,
+                                              left: 8,
+                                              right: 8,
+                                              child: _DebugMoodSelector(
+                                                current: _mood,
+                                                petType: _petType,
+                                                onChanged: (m) =>
+                                                    setState(() => _mood = m),
+                                              ),
+                                            ),
+                                          // Expand hint
+                                          if (_isTabPanelExpanded)
+                                            Positioned(
+                                              bottom: 8,
+                                              left: 0,
+                                              right: 0,
+                                              child: Text(
+                                                '탭을 접으려면 이 영역을 누르세요.',
+                                                textAlign: TextAlign.center,
                                                 style: theme
                                                     .textTheme
-                                                    .headlineMedium
+                                                    .bodySmall
                                                     ?.copyWith(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                      letterSpacing: 0.4,
+                                                      color: Colors.white60,
                                                     ),
                                               ),
-                                              if (_isTabPanelExpanded) ...[
-                                                const SizedBox(height: 10),
-                                                Text(
-                                                  '탭을 접으려면 이 영역을 누르세요.',
-                                                  style: theme
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.copyWith(
-                                                        color: Colors.white60,
-                                                      ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                            ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -516,6 +677,54 @@ class _HomeHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DebugMoodSelector extends StatelessWidget {
+  const _DebugMoodSelector({
+    required this.current,
+    required this.onChanged,
+    required this.petType,
+  });
+
+  final PetMood current;
+  final ValueChanged<PetMood> onChanged;
+  final PetType petType;
+
+  @override
+  Widget build(BuildContext context) {
+    final available =
+        PetMood.values.where((m) => petSprites[petType]!.containsKey(m));
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 4,
+      runSpacing: 4,
+      children: available.map((mood) {
+        final selected = mood == current;
+        return Material(
+          color: selected
+              ? Colors.white.withValues(alpha: 0.25)
+              : Colors.black.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => onChanged(mood),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                mood.label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: selected ? Colors.white : Colors.white70,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
