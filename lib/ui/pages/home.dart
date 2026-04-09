@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:client/models/pet.dart';
 import 'package:client/ui/widgets/sprite_animator.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,16 +19,89 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   static const _tabs = ['활동내역', '친구', '탐색', '상점'];
+  static const _githubApiBaseUrl = 'https://api.github.com';
 
   bool _isLoggingOut = false;
   int _selectedTabIndex = 0;
   bool _isTabPanelExpanded = false;
+  bool _isLoadingActivities = true;
+  String? _githubLogin;
+  String? _githubName;
+  String? _activityError;
+  List<GithubActivity> _activities = const [];
 
   // Pet state
   PetType _petType = PetType.classicalCat;
   PetMood _mood = PetMood.idle;
 
   SpriteInfo get _sprite => petSprites[_petType]![_mood]!;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGithubActivities();
+  }
+
+  Future<void> _loadGithubActivities() async {
+    setState(() {
+      _isLoadingActivities = true;
+      _activityError = null;
+    });
+
+    try {
+      final storage = SecureStorage().storage;
+      final login = await storage.read(key: SecureStorageKey.githubLogin.name);
+      final name = await storage.read(key: SecureStorageKey.githubName.name);
+
+      if (login == null || login.isEmpty) {
+        throw Exception('GitHub 사용자 정보를 찾을 수 없습니다.');
+      }
+
+      final uri = Uri.parse(
+        '$_githubApiBaseUrl/users/$login/events/public?per_page=20',
+      );
+      final response = await http.get(
+        uri,
+        headers: const {
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('GitHub 활동을 불러오지 못했습니다. (${response.statusCode})');
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) {
+        throw Exception('GitHub 응답 형식이 올바르지 않습니다.');
+      }
+
+      final activities = decoded
+          .whereType<Map<String, dynamic>>()
+          .map(GithubActivity.fromJson)
+          .toList();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _githubLogin = login;
+        _githubName = (name != null && name.isNotEmpty) ? name : login;
+        _activities = activities;
+        _isLoadingActivities = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _activityError = error.toString().replaceFirst('Exception: ', '');
+        _isLoadingActivities = false;
+      });
+    }
+  }
 
   Future<void> _logout() async {
     if (_isLoggingOut) {
@@ -557,48 +633,9 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   child: LayoutBuilder(
                                     builder: (context, contentConstraints) {
-                                      return SingleChildScrollView(
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        child: ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            minHeight:
-                                                contentConstraints.maxHeight,
-                                          ),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                _tabs[_selectedTabIndex],
-                                                textAlign: TextAlign.center,
-                                                style: theme
-                                                    .textTheme
-                                                    .titleLarge
-                                                    ?.copyWith(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                              ),
-                                              if (_isTabPanelExpanded) ...[
-                                                const SizedBox(height: 12),
-                                                Text(
-                                                  '${_tabs[_selectedTabIndex]} 정보가 이 영역에 표시될 예정입니다.',
-                                                  textAlign: TextAlign.center,
-                                                  style: theme
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.copyWith(
-                                                        color: Colors.white60,
-                                                        height: 1.5,
-                                                      ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
+                                      return _buildTabContent(
+                                        context,
+                                        contentConstraints,
                                       );
                                     },
                                   ),
@@ -617,6 +654,416 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Widget _buildTabContent(
+    BuildContext context,
+    BoxConstraints contentConstraints,
+  ) {
+    switch (_selectedTabIndex) {
+      case 0:
+        return _ActivityTabContent(
+          isExpanded: _isTabPanelExpanded,
+          isLoading: _isLoadingActivities,
+          githubName: _githubName,
+          githubLogin: _githubLogin,
+          error: _activityError,
+          activities: _activities,
+          onRetry: _loadGithubActivities,
+        );
+      default:
+        final theme = Theme.of(context);
+        return SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: contentConstraints.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _tabs[_selectedTabIndex],
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (_isTabPanelExpanded) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    '${_tabs[_selectedTabIndex]} 정보가 이 영역에 표시될 예정입니다.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white60,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+    }
+  }
+}
+
+class GithubActivity {
+  const GithubActivity({
+    required this.type,
+    required this.repoName,
+    required this.createdAt,
+    required this.title,
+    required this.description,
+  });
+
+  final String type;
+  final String repoName;
+  final DateTime? createdAt;
+  final String title;
+  final String description;
+
+  factory GithubActivity.fromJson(Map<String, dynamic> json) {
+    final type = (json['type'] ?? 'Event').toString();
+    final repo = json['repo'];
+    final payload = json['payload'];
+    final repoName = repo is Map<String, dynamic>
+        ? (repo['name'] ?? '알 수 없는 저장소').toString()
+        : '알 수 없는 저장소';
+    final createdAtRaw = json['created_at']?.toString();
+    final createdAt = createdAtRaw == null
+        ? null
+        : DateTime.tryParse(createdAtRaw)?.toLocal();
+
+    return GithubActivity(
+      type: type,
+      repoName: repoName,
+      createdAt: createdAt,
+      title: _buildTitle(type),
+      description: _buildDescription(type, payload, repoName),
+    );
+  }
+
+  static String _buildTitle(String type) {
+    switch (type) {
+      case 'PushEvent':
+        return '커밋을 푸시했어요';
+      case 'PullRequestEvent':
+        return 'PR 활동이 있어요';
+      case 'IssuesEvent':
+        return '이슈 활동이 있어요';
+      case 'IssueCommentEvent':
+        return '이슈 댓글을 남겼어요';
+      case 'PullRequestReviewEvent':
+        return 'PR 리뷰를 남겼어요';
+      case 'WatchEvent':
+        return '저장소에 스타를 눌렀어요';
+      case 'CreateEvent':
+        return '브랜치 또는 태그를 생성했어요';
+      case 'ForkEvent':
+        return '저장소를 포크했어요';
+      default:
+        return type.replaceAll('Event', ' 활동');
+    }
+  }
+
+  static String _buildDescription(
+    String type,
+    dynamic payload,
+    String repoName,
+  ) {
+    if (payload is! Map<String, dynamic>) {
+      return repoName;
+    }
+
+    switch (type) {
+      case 'PushEvent':
+        final commitCount = payload['size'];
+        final commits = payload['commits'];
+        if (commitCount is int && commitCount > 0) {
+          if (commits is List && commits.isNotEmpty) {
+            final firstCommit = commits.first;
+            if (firstCommit is Map<String, dynamic>) {
+              final message = firstCommit['message']?.toString().trim();
+              if (message != null && message.isNotEmpty) {
+                return '$repoName · $commitCount개 커밋 · $message';
+              }
+            }
+          }
+          return '$repoName · $commitCount개 커밋 푸시';
+        }
+        return '$repoName에 커밋을 푸시했습니다.';
+      case 'PullRequestEvent':
+        final action = payload['action']?.toString() ?? 'updated';
+        final pullRequest = payload['pull_request'];
+        final title = pullRequest is Map<String, dynamic>
+            ? pullRequest['title']?.toString()
+            : null;
+        return '$repoName · PR $action${title == null || title.isEmpty ? '' : ' · $title'}';
+      case 'IssuesEvent':
+        final action = payload['action']?.toString() ?? 'updated';
+        final issue = payload['issue'];
+        final title = issue is Map<String, dynamic>
+            ? issue['title']?.toString()
+            : null;
+        return '$repoName · 이슈 $action${title == null || title.isEmpty ? '' : ' · $title'}';
+      case 'IssueCommentEvent':
+        final issue = payload['issue'];
+        final title = issue is Map<String, dynamic>
+            ? issue['title']?.toString()
+            : null;
+        return '$repoName · 댓글 작성${title == null || title.isEmpty ? '' : ' · $title'}';
+      case 'PullRequestReviewEvent':
+        final review = payload['review'];
+        final state = review is Map<String, dynamic>
+            ? review['state']?.toString()
+            : null;
+        return '$repoName · 리뷰 ${state ?? '작성'}';
+      case 'WatchEvent':
+        return '$repoName · star';
+      case 'CreateEvent':
+        final refType = payload['ref_type']?.toString() ?? 'resource';
+        final ref = payload['ref']?.toString();
+        return '$repoName · $refType 생성${ref == null || ref.isEmpty ? '' : ' · $ref'}';
+      case 'ForkEvent':
+        return '$repoName · 포크 생성';
+      default:
+        return repoName;
+    }
+  }
+}
+
+class _ActivityTabContent extends StatelessWidget {
+  const _ActivityTabContent({
+    required this.isExpanded,
+    required this.isLoading,
+    required this.githubName,
+    required this.githubLogin,
+    required this.error,
+    required this.activities,
+    required this.onRetry,
+  });
+
+  final bool isExpanded;
+  final bool isLoading;
+  final String? githubName;
+  final String? githubLogin;
+  final String? error;
+  final List<GithubActivity> activities;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    if (!isExpanded) {
+      return Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.insights_rounded, color: colors.primary, size: 18),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '탭을 확장하면 GitHub 활동을 불러옵니다.',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white60,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '활동을 불러오지 못했습니다.',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              error!,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white60,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text('다시 시도'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          githubName ?? 'GitHub 활동',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        if (githubLogin != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            '@$githubLogin의 최근 공개 활동',
+            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white60),
+          ),
+        ],
+        const SizedBox(height: 16),
+        if (activities.isEmpty)
+          Expanded(
+            child: Center(
+              child: Text(
+                '표시할 공개 활동이 아직 없습니다.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white60,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: onRetry,
+              child: ListView.separated(
+                itemCount: activities.length,
+                separatorBuilder: (_, index) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final activity = activities[index];
+                  return Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white.withValues(alpha: 0.05),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: colors.primary.withValues(alpha: 0.18),
+                          ),
+                          child: Icon(
+                            _iconForActivity(activity.type),
+                            color: colors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                activity.title,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                activity.description,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white70,
+                                  height: 1.4,
+                                ),
+                              ),
+                              if (activity.createdAt != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  _formatRelativeTime(activity.createdAt!),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.white38,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  static IconData _iconForActivity(String type) {
+    switch (type) {
+      case 'PushEvent':
+        return Icons.upload_rounded;
+      case 'PullRequestEvent':
+        return Icons.merge_type_rounded;
+      case 'IssuesEvent':
+        return Icons.error_outline_rounded;
+      case 'IssueCommentEvent':
+        return Icons.chat_bubble_outline_rounded;
+      case 'PullRequestReviewEvent':
+        return Icons.rate_review_outlined;
+      case 'WatchEvent':
+        return Icons.star_border_rounded;
+      case 'ForkEvent':
+        return Icons.call_split_rounded;
+      default:
+        return Icons.bolt_rounded;
+    }
+  }
+
+  static String _formatRelativeTime(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+    if (difference.inMinutes < 1) {
+      return '방금 전';
+    }
+    if (difference.inHours < 1) {
+      return '${difference.inMinutes}분 전';
+    }
+    if (difference.inDays < 1) {
+      return '${difference.inHours}시간 전';
+    }
+    if (difference.inDays < 30) {
+      return '${difference.inDays}일 전';
+    }
+    final month = (difference.inDays / 30).floor();
+    if (month < 12) {
+      return '$month개월 전';
+    }
+    final year = (difference.inDays / 365).floor();
+    return '$year년 전';
   }
 }
 
@@ -725,27 +1172,6 @@ class _DebugMoodSelector extends StatelessWidget {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(colors: [color, Colors.transparent]),
-        ),
-      ),
     );
   }
 }

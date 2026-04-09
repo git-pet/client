@@ -214,7 +214,8 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
     final login = _displayLogin(user);
     final name = _displayName(user);
-    final accessToken = _supabase?.auth.currentSession?.accessToken;
+    final session = _supabase?.auth.currentSession;
+    final accessToken = session?.providerToken ?? session?.accessToken;
 
     if (accessToken != null) {
       await SecureStorage().storage.write(
