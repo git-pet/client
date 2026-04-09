@@ -420,7 +420,9 @@ class _HomePageState extends State<HomePage> {
                                                 _sprite.fileName,
                                               ),
                                               frameCount: _sprite.frameCount,
-                                              size: _petType.frameSize * 3.0,
+                                              size: _petType.frameSize <= 16
+                                                  ? 64
+                                                  : 96,
                                               fps: 6,
                                             ),
                                           ),
