@@ -71,6 +71,36 @@ flutter:
     - assets/pets/cats/CatSprites/Classical/Individual/
     - assets/pets/cats/CatSprites/CatwithRibbon/
     - assets/pets/cats/RetroCats/Sprites/
+    - assets/pets/dogs/Labrador/Sprites/
+    - assets/pets/dogs/Golden/
+    - assets/pets/dogs/Husky/
+    - assets/pets/dogs/Dalmatian/
+    - assets/pets/dogs/CaneCorso/
+    - assets/pets/dogs/DogoArgentino/
+    - assets/pets/dogs/LittlePharaoh Hound/
+    - assets/pets/bunnies/BunnyBrown/
+    - assets/pets/bunnies/BunnyBlack/
+    - assets/pets/bunnies/WhiteBunny/
+    - assets/pets/bunnies/GreyBunny/
+    - assets/pets/bunnies/BlackWhite/
+    - assets/pets/bunnies/BrownWhite/
+    - assets/pets/bunnies/Brown2Color/
+    - assets/pets/bunnies/LightBrown/
+    - assets/pets/bunnies/DemonicBunny/
+    - assets/pets/bunnies/FantasyBunny/
+    - assets/pets/bird/Birds/Black/
+    - assets/pets/bird/Birds/Blue/
+    - assets/pets/bird/Birds/Green/
+    - assets/pets/bird/Birds/Orange/
+    - assets/pets/bird/Birds/Pink/
+    - assets/pets/bird/Birds/Purple/
+    - assets/pets/bird/Birds/White/
+    - assets/pets/bird/Birds/Yellow/
+    - assets/pets/bird/Parrot/Parrot1/
+    - assets/pets/bird/Parrot/Parrot2/
+    - assets/pets/bird/Parrot/Parrot3/
+    - assets/pets/bird/Parrot/Parrot4/
+    - assets/pets/bird/Parrot/Parrot5/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
