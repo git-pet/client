@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:client/config/app_env.dart';
+import 'package:client/l10n/app_localizations.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -54,12 +55,13 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           if (!mounted) {
             return;
           }
+          final l10n = AppLocalizations.of(context);
           setState(() {
             _currentUser = data.session?.user ?? _supabase!.auth.currentUser;
             _resetOAuthFlow();
             _statusMessage = _currentUser == null
                 ? null
-                : 'GitHub 로그인 완료: @${_displayLogin(_currentUser!)}';
+                : l10n.loginStatusSignedIn(_displayLogin(_currentUser!));
           });
           _notifyLoginSuccessIfNeeded();
           break;
@@ -68,11 +70,12 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           if (!mounted) {
             return;
           }
+          final l10n = AppLocalizations.of(context);
           setState(() {
             _currentUser = null;
             _didNotifyLoginSuccess = false;
             _resetOAuthFlow();
-            _statusMessage = '로그아웃되었습니다.';
+            _statusMessage = l10n.loginStatusSignedOut;
           });
           break;
         default:
@@ -122,8 +125,10 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       return;
     }
 
+    final l10n = AppLocalizations.of(context);
+
     if (!_isSupabaseConfigured || _supabase == null) {
-      _showSnackBar('Supabase 설정이 없어 GitHub 로그인을 시작할 수 없습니다.');
+      _showSnackBar(l10n.loginErrorSupabaseUnconfigured);
       return;
     }
 
@@ -131,7 +136,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       _isSubmitting = true;
       _awaitingOAuthResult = true;
       _didLeaveAppForOAuth = false;
-      _statusMessage = 'GitHub 로그인 페이지를 여는 중입니다.';
+      _statusMessage = l10n.loginStatusOpeningBrowser;
     });
 
     try {
@@ -152,7 +157,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       }
 
       setState(() {
-        _statusMessage = '브라우저에서 GitHub 로그인을 완료하세요.';
+        _statusMessage = l10n.loginStatusCompleteInBrowser;
       });
     } on AuthException catch (error) {
       _handleLoginFailure(error.message);
@@ -196,15 +201,16 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     });
   }
 
-  void _handleLoginFailure([String message = '로그인에 실패하였습니다']) {
+  void _handleLoginFailure([String? message]) {
     if (!mounted) {
       return;
     }
+    final resolved = message ?? AppLocalizations.of(context).loginErrorGeneric;
     setState(() {
       _resetOAuthFlow();
-      _statusMessage = message;
+      _statusMessage = resolved;
     });
-    _showSnackBar(message);
+    _showSnackBar(resolved);
   }
 
   Future<void> _persistUser(User? user) async {
@@ -276,6 +282,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final user = _currentUser;
     final login = user == null ? null : _displayLogin(user);
     final name = user == null ? null : _displayName(user);
@@ -306,7 +313,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 const SizedBox(height: 20),
 
                 Text(
-                  'GitPet',
+                  l10n.appTitle,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -314,7 +321,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '커밋할수록 자라나는, 나만의 작은 펫',
+                  l10n.loginTagline,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Colors.white38,
                   ),
@@ -370,7 +377,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '연결됨',
+                            l10n.loginConnectedBadge,
                             style: TextStyle(
                               color: colors.primary,
                               fontSize: 12,
@@ -419,7 +426,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                'GitHub로 계속하기',
+                                l10n.loginContinueWithGithub,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,

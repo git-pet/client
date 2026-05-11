@@ -17,4 +17,5 @@ enum SecureStorageKey {
   githubRefreshToken,
   githubLogin,
   githubName,
+  localeCode,
 }

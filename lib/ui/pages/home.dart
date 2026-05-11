@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:client/config/app_locale.dart';
+import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/pet.dart';
 import 'package:client/ui/widgets/sprite_animator.dart';
 import 'package:client/utils/secure_storage.dart';
@@ -18,8 +20,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const _tabs = ['활동내역', '친구', '탐색', '상점'];
   static const _githubApiBaseUrl = 'https://api.github.com';
+
+  List<String> _tabs(AppLocalizations l10n) => [
+    l10n.homeTabActivity,
+    l10n.homeTabFriends,
+    l10n.homeTabExplore,
+    l10n.homeTabShop,
+  ];
 
   bool _isLoggingOut = false;
   int _selectedTabIndex = 0;
@@ -57,7 +65,10 @@ class _HomePageState extends State<HomePage> {
       );
 
       if (login == null || login.isEmpty) {
-        throw Exception('GitHub 사용자 정보를 찾을 수 없습니다.');
+        if (mounted) {
+          throw Exception(AppLocalizations.of(context).homeActivityUserNotFound);
+        }
+        return;
       }
 
       final uri = Uri.parse(
@@ -79,12 +90,16 @@ class _HomePageState extends State<HomePage> {
       }
 
       if (response.statusCode != 200) {
-        throw Exception('GitHub 활동을 불러오지 못했습니다. (${response.statusCode})');
+        if (!mounted) return;
+        throw Exception(
+          AppLocalizations.of(context).homeActivityFetchFailed(response.statusCode),
+        );
       }
 
       final decoded = jsonDecode(response.body);
       if (decoded is! List) {
-        throw Exception('GitHub 응답 형식이 올바르지 않습니다.');
+        if (!mounted) return;
+        throw Exception(AppLocalizations.of(context).homeActivityInvalidResponse);
       }
 
       final activities = decoded
@@ -121,7 +136,7 @@ class _HomePageState extends State<HomePage> {
     //  현재는 임시로 강제 로그아웃 후 재로그인 유도. 재발급 성공 시에는
     //  새 토큰을 저장하고 _loadGithubActivities를 재시도하도록 변경할 것.
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('GitHub 인증이 만료되어 다시 로그인이 필요합니다.')),
+      SnackBar(content: Text(AppLocalizations.of(context).homeSessionExpired)),
     );
     await _logout();
   }
@@ -150,9 +165,9 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('로그아웃에 실패하였습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).homeLogoutFailed)),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -162,9 +177,123 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  static const List<Locale?> _supportedLanguageChoices = [
+    null,
+    Locale('ko'),
+    Locale('en'),
+  ];
+
+  String _currentLocaleLabel(AppLocalizations l10n, Locale? locale) {
+    if (locale == null) return l10n.homeLanguageSystem;
+    switch (locale.languageCode) {
+      case 'ko':
+        return '한국어';
+      case 'en':
+        return 'English';
+      default:
+        return locale.languageCode;
+    }
+  }
+
+  Future<void> _showLanguageSelector() async {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: ValueListenableBuilder<Locale?>(
+            valueListenable: AppLocale.notifier,
+            builder: (context, currentLocale, _) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      l10n.homeLanguageSelectorTitle,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._supportedLanguageChoices.map((locale) {
+                      final selected =
+                          currentLocale?.languageCode == locale?.languageCode;
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        leading: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? colors.primary.withValues(alpha: 0.25)
+                                : colors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.language_rounded,
+                            color: selected
+                                ? colors.primary
+                                : Colors.white54,
+                          ),
+                        ),
+                        title: Text(
+                          _currentLocaleLabel(l10n, locale),
+                          style: TextStyle(
+                            color: selected ? colors.primary : Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        trailing: selected
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: colors.primary,
+                              )
+                            : null,
+                        onTap: () async {
+                          await AppLocale.setLocale(locale);
+                          if (!sheetContext.mounted) return;
+                          Navigator.of(sheetContext).pop();
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _showPetSelector() async {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -199,7 +328,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      '펫 선택 (Debug)',
+                      l10n.homePetSelectorTitle,
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
@@ -277,6 +406,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openSettings() async {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -304,7 +434,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  '설정',
+                  l10n.homeSettingsTitle,
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -312,7 +442,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '계정과 앱 관련 기능을 여기서 관리합니다.',
+                  l10n.homeSettingsDescription,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Colors.white54,
                   ),
@@ -333,9 +463,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: Icon(Icons.pets_rounded, color: colors.primary),
                     ),
-                    title: const Text(
-                      '펫 변경 (Debug)',
-                      style: TextStyle(
+                    title: Text(
+                      l10n.homeSettingsPetChange,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
@@ -367,18 +497,53 @@ class _HomePageState extends State<HomePage> {
                       color: colors.primary.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(Icons.logout_rounded, color: colors.primary),
+                    child: Icon(Icons.language_rounded, color: colors.primary),
                   ),
-                  title: const Text(
-                    '로그아웃',
-                    style: TextStyle(
+                  title: Text(
+                    l10n.homeSettingsLanguage,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  subtitle: const Text(
-                    '현재 연결된 GitHub 계정을 해제합니다.',
-                    style: TextStyle(color: Colors.white54),
+                  subtitle: Text(
+                    _currentLocaleLabel(l10n, AppLocale.notifier.value),
+                    style: const TextStyle(color: Colors.white54),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white38,
+                  ),
+                  onTap: () async {
+                    Navigator.of(sheetContext).pop();
+                    await _showLanguageSelector();
+                  },
+                ),
+                const Divider(color: Colors.white12),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  leading: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(Icons.logout_rounded, color: colors.primary),
+                  ),
+                  title: Text(
+                    l10n.homeSettingsLogout,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Text(
+                    l10n.homeSettingsLogoutDescription,
+                    style: const TextStyle(color: Colors.white54),
                   ),
                   trailing: _isLoggingOut
                       ? const SizedBox(
@@ -409,6 +574,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final tabs = _tabs(l10n);
 
     return Scaffold(
       body: SafeArea(
@@ -467,7 +634,7 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '나의 펫 룸',
+                                l10n.homePetRoomTitle,
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w800,
@@ -541,7 +708,7 @@ class _HomePageState extends State<HomePage> {
                                               left: 0,
                                               right: 0,
                                               child: Text(
-                                                '탭을 접으려면 이 영역을 누르세요.',
+                                                l10n.homeTabCollapseHint,
                                                 textAlign: TextAlign.center,
                                                 style: theme
                                                     .textTheme
@@ -577,12 +744,12 @@ class _HomePageState extends State<HomePage> {
                           child: Column(
                             children: [
                               Row(
-                                children: List.generate(_tabs.length, (index) {
+                                children: List.generate(tabs.length, (index) {
                                   final isSelected = _selectedTabIndex == index;
                                   return Expanded(
                                     child: Padding(
                                       padding: EdgeInsets.only(
-                                        right: index == _tabs.length - 1
+                                        right: index == tabs.length - 1
                                             ? 0
                                             : 8,
                                       ),
@@ -622,7 +789,7 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           ),
                                           child: Text(
-                                            _tabs[index],
+                                            tabs[index],
                                             textAlign: TextAlign.center,
                                             style: theme.textTheme.labelLarge
                                                 ?.copyWith(
@@ -655,6 +822,8 @@ class _HomePageState extends State<HomePage> {
                                       return _buildTabContent(
                                         context,
                                         contentConstraints,
+                                        l10n,
+                                        tabs,
                                       );
                                     },
                                   ),
@@ -678,6 +847,8 @@ class _HomePageState extends State<HomePage> {
   Widget _buildTabContent(
     BuildContext context,
     BoxConstraints contentConstraints,
+    AppLocalizations l10n,
+    List<String> tabs,
   ) {
     switch (_selectedTabIndex) {
       case 0:
@@ -692,6 +863,7 @@ class _HomePageState extends State<HomePage> {
         );
       default:
         final theme = Theme.of(context);
+        final tabLabel = tabs[_selectedTabIndex];
         return SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: ConstrainedBox(
@@ -701,7 +873,7 @@ class _HomePageState extends State<HomePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _tabs[_selectedTabIndex],
+                  tabLabel,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
@@ -711,7 +883,7 @@ class _HomePageState extends State<HomePage> {
                 if (_isTabPanelExpanded) ...[
                   const SizedBox(height: 12),
                   Text(
-                    '${_tabs[_selectedTabIndex]} 정보가 이 영역에 표시될 예정입니다.',
+                    l10n.homeTabPlaceholder(tabLabel),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.white60,
@@ -732,23 +904,21 @@ class GithubActivity {
     required this.type,
     required this.repoName,
     required this.createdAt,
-    required this.title,
-    required this.description,
+    required this.payload,
   });
 
   final String type;
   final String repoName;
   final DateTime? createdAt;
-  final String title;
-  final String description;
+  final Map<String, dynamic>? payload;
 
   factory GithubActivity.fromJson(Map<String, dynamic> json) {
     final type = (json['type'] ?? 'Event').toString();
     final repo = json['repo'];
     final payload = json['payload'];
     final repoName = repo is Map<String, dynamic>
-        ? (repo['name'] ?? '알 수 없는 저장소').toString()
-        : '알 수 없는 저장소';
+        ? (repo['name'] ?? '').toString()
+        : '';
     final createdAtRaw = json['created_at']?.toString();
     final createdAt = createdAtRaw == null
         ? null
@@ -758,97 +928,8 @@ class GithubActivity {
       type: type,
       repoName: repoName,
       createdAt: createdAt,
-      title: _buildTitle(type),
-      description: _buildDescription(type, payload, repoName),
+      payload: payload is Map<String, dynamic> ? payload : null,
     );
-  }
-
-  static String _buildTitle(String type) {
-    switch (type) {
-      case 'PushEvent':
-        return '커밋을 푸시했어요';
-      case 'PullRequestEvent':
-        return 'PR 활동이 있어요';
-      case 'IssuesEvent':
-        return '이슈 활동이 있어요';
-      case 'IssueCommentEvent':
-        return '이슈 댓글을 남겼어요';
-      case 'PullRequestReviewEvent':
-        return 'PR 리뷰를 남겼어요';
-      case 'WatchEvent':
-        return '저장소에 스타를 눌렀어요';
-      case 'CreateEvent':
-        return '브랜치 또는 태그를 생성했어요';
-      case 'ForkEvent':
-        return '저장소를 포크했어요';
-      default:
-        return type.replaceAll('Event', ' 활동');
-    }
-  }
-
-  static String _buildDescription(
-    String type,
-    dynamic payload,
-    String repoName,
-  ) {
-    if (payload is! Map<String, dynamic>) {
-      return repoName;
-    }
-
-    switch (type) {
-      case 'PushEvent':
-        final commitCount = payload['size'];
-        final commits = payload['commits'];
-        if (commitCount is int && commitCount > 0) {
-          if (commits is List && commits.isNotEmpty) {
-            final firstCommit = commits.first;
-            if (firstCommit is Map<String, dynamic>) {
-              final message = firstCommit['message']?.toString().trim();
-              if (message != null && message.isNotEmpty) {
-                return '$repoName · $commitCount개 커밋 · $message';
-              }
-            }
-          }
-          return '$repoName · $commitCount개 커밋 푸시';
-        }
-        return '$repoName에 커밋을 푸시했습니다.';
-      case 'PullRequestEvent':
-        final action = payload['action']?.toString() ?? 'updated';
-        final pullRequest = payload['pull_request'];
-        final title = pullRequest is Map<String, dynamic>
-            ? pullRequest['title']?.toString()
-            : null;
-        return '$repoName · PR $action${title == null || title.isEmpty ? '' : ' · $title'}';
-      case 'IssuesEvent':
-        final action = payload['action']?.toString() ?? 'updated';
-        final issue = payload['issue'];
-        final title = issue is Map<String, dynamic>
-            ? issue['title']?.toString()
-            : null;
-        return '$repoName · 이슈 $action${title == null || title.isEmpty ? '' : ' · $title'}';
-      case 'IssueCommentEvent':
-        final issue = payload['issue'];
-        final title = issue is Map<String, dynamic>
-            ? issue['title']?.toString()
-            : null;
-        return '$repoName · 댓글 작성${title == null || title.isEmpty ? '' : ' · $title'}';
-      case 'PullRequestReviewEvent':
-        final review = payload['review'];
-        final state = review is Map<String, dynamic>
-            ? review['state']?.toString()
-            : null;
-        return '$repoName · 리뷰 ${state ?? '작성'}';
-      case 'WatchEvent':
-        return '$repoName · star';
-      case 'CreateEvent':
-        final refType = payload['ref_type']?.toString() ?? 'resource';
-        final ref = payload['ref']?.toString();
-        return '$repoName · $refType 생성${ref == null || ref.isEmpty ? '' : ' · $ref'}';
-      case 'ForkEvent':
-        return '$repoName · 포크 생성';
-      default:
-        return repoName;
-    }
   }
 }
 
@@ -875,6 +956,7 @@ class _ActivityTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     if (!isExpanded) {
       return Center(
@@ -885,7 +967,7 @@ class _ActivityTabContent extends StatelessWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                '탭을 확장하면 GitHub 활동을 불러옵니다.',
+                l10n.homeActivityCollapsedHint,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -909,7 +991,7 @@ class _ActivityTabContent extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '활동을 불러오지 못했습니다.',
+              l10n.homeActivityLoadError,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
@@ -927,7 +1009,7 @@ class _ActivityTabContent extends StatelessWidget {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: onRetry,
-              child: const Text('다시 시도'),
+              child: Text(l10n.homeActivityRetry),
             ),
           ],
         ),
@@ -938,7 +1020,7 @@ class _ActivityTabContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          githubName ?? 'GitHub 활동',
+          githubName ?? l10n.homeActivityDefaultName,
           style: theme.textTheme.titleLarge?.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w800,
@@ -947,7 +1029,7 @@ class _ActivityTabContent extends StatelessWidget {
         if (githubLogin != null) ...[
           const SizedBox(height: 4),
           Text(
-            '@$githubLogin의 최근 공개 활동',
+            l10n.homeActivityRecentSubtitle(githubLogin!),
             style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white60),
           ),
         ],
@@ -956,7 +1038,7 @@ class _ActivityTabContent extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                '표시할 공개 활동이 아직 없습니다.',
+                l10n.homeActivityEmpty,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.white60,
@@ -1006,7 +1088,7 @@ class _ActivityTabContent extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                activity.title,
+                                _titleForActivity(l10n, activity.type),
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -1014,7 +1096,7 @@ class _ActivityTabContent extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                activity.description,
+                                _descriptionForActivity(l10n, activity),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white70,
                                   height: 1.4,
@@ -1023,7 +1105,7 @@ class _ActivityTabContent extends StatelessWidget {
                               if (activity.createdAt != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  _formatRelativeTime(activity.createdAt!),
+                                  _formatRelativeTime(l10n, activity.createdAt!),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: Colors.white38,
                                   ),
@@ -1041,6 +1123,105 @@ class _ActivityTabContent extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  static String _titleForActivity(AppLocalizations l10n, String type) {
+    switch (type) {
+      case 'PushEvent':
+        return l10n.activityTitlePush;
+      case 'PullRequestEvent':
+        return l10n.activityTitlePr;
+      case 'IssuesEvent':
+        return l10n.activityTitleIssue;
+      case 'IssueCommentEvent':
+        return l10n.activityTitleIssueComment;
+      case 'PullRequestReviewEvent':
+        return l10n.activityTitlePrReview;
+      case 'WatchEvent':
+        return l10n.activityTitleWatch;
+      case 'CreateEvent':
+        return l10n.activityTitleCreate;
+      case 'ForkEvent':
+        return l10n.activityTitleFork;
+      default:
+        return l10n.activityTitleDefault(type.replaceAll('Event', ''));
+    }
+  }
+
+  static String _descriptionForActivity(
+    AppLocalizations l10n,
+    GithubActivity activity,
+  ) {
+    final repo = activity.repoName.isEmpty
+        ? l10n.homeUnknownRepo
+        : activity.repoName;
+    final payload = activity.payload;
+    if (payload == null) {
+      return repo;
+    }
+
+    switch (activity.type) {
+      case 'PushEvent':
+        final commitCount = payload['size'];
+        final commits = payload['commits'];
+        if (commitCount is int && commitCount > 0) {
+          if (commits is List && commits.isNotEmpty) {
+            final firstCommit = commits.first;
+            if (firstCommit is Map<String, dynamic>) {
+              final message = firstCommit['message']?.toString().trim();
+              if (message != null && message.isNotEmpty) {
+                return l10n.activityDescPushWithMessage(repo, commitCount, message);
+              }
+            }
+          }
+          return l10n.activityDescPushCount(repo, commitCount);
+        }
+        return l10n.activityDescPushFallback(repo);
+      case 'PullRequestEvent':
+        final action = payload['action']?.toString() ?? 'updated';
+        final pullRequest = payload['pull_request'];
+        final title = pullRequest is Map<String, dynamic>
+            ? pullRequest['title']?.toString()
+            : null;
+        return (title == null || title.isEmpty)
+            ? l10n.activityDescPrNoTitle(repo, action)
+            : l10n.activityDescPrWithTitle(repo, action, title);
+      case 'IssuesEvent':
+        final action = payload['action']?.toString() ?? 'updated';
+        final issue = payload['issue'];
+        final title = issue is Map<String, dynamic>
+            ? issue['title']?.toString()
+            : null;
+        return (title == null || title.isEmpty)
+            ? l10n.activityDescIssueNoTitle(repo, action)
+            : l10n.activityDescIssueWithTitle(repo, action, title);
+      case 'IssueCommentEvent':
+        final issue = payload['issue'];
+        final title = issue is Map<String, dynamic>
+            ? issue['title']?.toString()
+            : null;
+        return (title == null || title.isEmpty)
+            ? l10n.activityDescIssueCommentNoTitle(repo)
+            : l10n.activityDescIssueCommentWithTitle(repo, title);
+      case 'PullRequestReviewEvent':
+        final review = payload['review'];
+        final state = review is Map<String, dynamic>
+            ? review['state']?.toString()
+            : null;
+        return l10n.activityDescPrReview(repo, state ?? 'submitted');
+      case 'WatchEvent':
+        return l10n.activityDescWatch(repo);
+      case 'CreateEvent':
+        final refType = payload['ref_type']?.toString() ?? 'resource';
+        final ref = payload['ref']?.toString();
+        return (ref == null || ref.isEmpty)
+            ? l10n.activityDescCreateNoRef(repo, refType)
+            : l10n.activityDescCreateWithRef(repo, refType, ref);
+      case 'ForkEvent':
+        return l10n.activityDescFork(repo);
+      default:
+        return repo;
+    }
   }
 
   static IconData _iconForActivity(String type) {
@@ -1087,26 +1268,29 @@ class _ActivityTabContent extends StatelessWidget {
     }
   }
 
-  static String _formatRelativeTime(DateTime dateTime) {
+  static String _formatRelativeTime(
+    AppLocalizations l10n,
+    DateTime dateTime,
+  ) {
     final difference = DateTime.now().difference(dateTime);
     if (difference.inMinutes < 1) {
-      return '방금 전';
+      return l10n.relativeJustNow;
     }
     if (difference.inHours < 1) {
-      return '${difference.inMinutes}분 전';
+      return l10n.relativeMinutes(difference.inMinutes);
     }
     if (difference.inDays < 1) {
-      return '${difference.inHours}시간 전';
+      return l10n.relativeHours(difference.inHours);
     }
     if (difference.inDays < 30) {
-      return '${difference.inDays}일 전';
+      return l10n.relativeDays(difference.inDays);
     }
     final month = (difference.inDays / 30).floor();
     if (month < 12) {
-      return '$month개월 전';
+      return l10n.relativeMonths(month);
     }
     final year = (difference.inDays / 365).floor();
-    return '$year년 전';
+    return l10n.relativeYears(year);
   }
 }
 
@@ -1120,6 +1304,7 @@ class _HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
@@ -1142,7 +1327,7 @@ class _HomeHeader extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'GitPet Home',
+              l10n.homeAppTitle,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
