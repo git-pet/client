@@ -11,4 +11,11 @@ class SecureStorage {
   }
 }
 
-enum SecureStorageKey { introSeen, githubAccessToken, githubLogin, githubName }
+enum SecureStorageKey {
+  introSeen,
+  githubAccessToken,
+  githubRefreshToken,
+  githubLogin,
+  githubName,
+  localeCode,
+}

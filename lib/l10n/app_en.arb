@@ -1,0 +1,198 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "GitPet",
+
+  "introSkip": "Skip",
+  "introNext": "Next",
+  "introStart": "Get started",
+  "introPage1Title": "Welcome to GitPet!",
+  "introPage1Description": "Raise your very own pet\nthat grows with every commit.",
+  "introPage2Title": "Grow through commits",
+  "introPage2Description": "Your Git activity is your pet's XP.\nKeep coding to make it stronger.",
+  "introPage3Title": "Reach your goals",
+  "introPage3Description": "Build commit streaks and\nearn special rewards.",
+
+  "loginTagline": "A tiny pet that grows with your commits",
+  "loginConnectedBadge": "Connected",
+  "loginContinueWithGithub": "Continue with GitHub",
+  "loginErrorSupabaseUnconfigured": "Supabase is not configured, so GitHub sign-in can't start.",
+  "loginStatusOpeningBrowser": "Opening the GitHub sign-in page.",
+  "loginStatusCompleteInBrowser": "Finish signing in with GitHub in your browser.",
+  "loginStatusSignedIn": "Signed in to GitHub as @{login}",
+  "@loginStatusSignedIn": {
+    "placeholders": { "login": { "type": "String" } }
+  },
+  "loginStatusSignedOut": "You have been signed out.",
+  "loginErrorGeneric": "Sign-in failed",
+
+  "homeAppTitle": "GitPet Home",
+  "homePetRoomTitle": "My pet room",
+
+  "homeTabActivity": "Activity",
+  "homeTabFriends": "Friends",
+  "homeTabExplore": "Explore",
+  "homeTabShop": "Shop",
+
+  "homeTabCollapseHint": "Tap this area to collapse the panel.",
+  "homeTabPlaceholder": "{tab} content will appear here.",
+  "@homeTabPlaceholder": {
+    "placeholders": { "tab": { "type": "String" } }
+  },
+
+  "homeSettingsTitle": "Settings",
+  "homeSettingsDescription": "Manage your account and app features here.",
+  "homeSettingsPetChange": "Change pet (Debug)",
+  "homeSettingsLanguage": "Language",
+  "homeSettingsLanguageDescription": "Choose your app language.",
+  "homeLanguageSelectorTitle": "Select language",
+  "homeLanguageSystem": "System default",
+  "homeSettingsLogout": "Sign out",
+  "homeSettingsLogoutDescription": "Disconnect the linked GitHub account.",
+  "homePetSelectorTitle": "Choose a pet (Debug)",
+  "homeLogoutFailed": "Sign-out failed.",
+  "homeSessionExpired": "Your GitHub session has expired. Please sign in again.",
+
+  "homeActivityUserNotFound": "GitHub user info could not be found.",
+  "homeActivityFetchFailed": "Failed to load GitHub activity. ({status})",
+  "@homeActivityFetchFailed": {
+    "placeholders": { "status": { "type": "int" } }
+  },
+  "homeActivityInvalidResponse": "GitHub returned an invalid response.",
+  "homeActivityCollapsedHint": "Expand the tab to load GitHub activity.",
+  "homeActivityLoadError": "Could not load activity.",
+  "homeActivityRetry": "Try again",
+  "homeActivityDefaultName": "GitHub activity",
+  "homeActivityRecentSubtitle": "Recent public activity of @{login}",
+  "@homeActivityRecentSubtitle": {
+    "placeholders": { "login": { "type": "String" } }
+  },
+  "homeActivityEmpty": "No public activity to show yet.",
+  "homeUnknownRepo": "Unknown repository",
+
+  "activityTitlePush": "Pushed commits",
+  "activityTitlePr": "Pull request activity",
+  "activityTitleIssue": "Issue activity",
+  "activityTitleIssueComment": "Left an issue comment",
+  "activityTitlePrReview": "Reviewed a pull request",
+  "activityTitleWatch": "Starred a repository",
+  "activityTitleCreate": "Created a branch or tag",
+  "activityTitleFork": "Forked a repository",
+  "activityTitleDefault": "{type} activity",
+  "@activityTitleDefault": {
+    "placeholders": { "type": { "type": "String" } }
+  },
+
+  "activityDescPushWithMessage": "{repo} · {count} commits · {message}",
+  "@activityDescPushWithMessage": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "count": { "type": "int" },
+      "message": { "type": "String" }
+    }
+  },
+  "activityDescPushCount": "{repo} · {count} commits pushed",
+  "@activityDescPushCount": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "activityDescPushFallback": "Pushed commits to {repo}.",
+  "@activityDescPushFallback": {
+    "placeholders": { "repo": { "type": "String" } }
+  },
+  "activityDescPrWithTitle": "{repo} · PR {action} · {title}",
+  "@activityDescPrWithTitle": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "action": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "activityDescPrNoTitle": "{repo} · PR {action}",
+  "@activityDescPrNoTitle": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "action": { "type": "String" }
+    }
+  },
+  "activityDescIssueWithTitle": "{repo} · issue {action} · {title}",
+  "@activityDescIssueWithTitle": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "action": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "activityDescIssueNoTitle": "{repo} · issue {action}",
+  "@activityDescIssueNoTitle": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "action": { "type": "String" }
+    }
+  },
+  "activityDescIssueCommentWithTitle": "{repo} · comment · {title}",
+  "@activityDescIssueCommentWithTitle": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "activityDescIssueCommentNoTitle": "{repo} · comment",
+  "@activityDescIssueCommentNoTitle": {
+    "placeholders": { "repo": { "type": "String" } }
+  },
+  "activityDescPrReview": "{repo} · review {state}",
+  "@activityDescPrReview": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "state": { "type": "String" }
+    }
+  },
+  "activityDescWatch": "{repo} · star",
+  "@activityDescWatch": {
+    "placeholders": { "repo": { "type": "String" } }
+  },
+  "activityDescCreateWithRef": "{repo} · {refType} created · {ref}",
+  "@activityDescCreateWithRef": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "refType": { "type": "String" },
+      "ref": { "type": "String" }
+    }
+  },
+  "activityDescCreateNoRef": "{repo} · {refType} created",
+  "@activityDescCreateNoRef": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "refType": { "type": "String" }
+    }
+  },
+  "activityDescFork": "{repo} · fork created",
+  "@activityDescFork": {
+    "placeholders": { "repo": { "type": "String" } }
+  },
+
+  "relativeJustNow": "Just now",
+  "relativeMinutes": "{minutes, plural, =1{1 minute ago} other{{minutes} minutes ago}}",
+  "@relativeMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "relativeHours": "{hours, plural, =1{1 hour ago} other{{hours} hours ago}}",
+  "@relativeHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "relativeDays": "{days, plural, =1{1 day ago} other{{days} days ago}}",
+  "@relativeDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "relativeMonths": "{months, plural, =1{1 month ago} other{{months} months ago}}",
+  "@relativeMonths": {
+    "placeholders": { "months": { "type": "int" } }
+  },
+  "relativeYears": "{years, plural, =1{1 year ago} other{{years} years ago}}",
+  "@relativeYears": {
+    "placeholders": { "years": { "type": "int" } }
+  }
+}
