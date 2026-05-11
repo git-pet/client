@@ -955,13 +955,14 @@ class _ActivityTabContent extends StatelessWidget {
                 separatorBuilder: (_, index) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final activity = activities[index];
+                  final accent = _colorForActivity(activity.type);
                   return Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       color: Colors.white.withValues(alpha: 0.05),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: accent.withValues(alpha: 0.22),
                       ),
                     ),
                     child: Row(
@@ -972,11 +973,11 @@ class _ActivityTabContent extends StatelessWidget {
                           height: 40,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            color: colors.primary.withValues(alpha: 0.18),
+                            color: accent.withValues(alpha: 0.18),
                           ),
                           child: Icon(
                             _iconForActivity(activity.type),
-                            color: colors.primary,
+                            color: accent,
                             size: 20,
                           ),
                         ),
@@ -1041,6 +1042,29 @@ class _ActivityTabContent extends StatelessWidget {
         return Icons.call_split_rounded;
       default:
         return Icons.bolt_rounded;
+    }
+  }
+
+  static Color _colorForActivity(String type) {
+    switch (type) {
+      case 'PushEvent':
+        return const Color(0xFF4FC3F7);
+      case 'PullRequestEvent':
+        return const Color(0xFFB388FF);
+      case 'IssuesEvent':
+        return const Color(0xFFFF8A65);
+      case 'IssueCommentEvent':
+        return const Color(0xFF4DD0E1);
+      case 'PullRequestReviewEvent':
+        return const Color(0xFF81C784);
+      case 'WatchEvent':
+        return const Color(0xFFFFD54F);
+      case 'CreateEvent':
+        return const Color(0xFF00897B);
+      case 'ForkEvent':
+        return const Color(0xFFF06292);
+      default:
+        return const Color(0xFFB0BEC5);
     }
   }
 
