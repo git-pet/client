@@ -52,6 +52,9 @@ class _HomePageState extends State<HomePage> {
       final storage = SecureStorage().storage;
       final login = await storage.read(key: SecureStorageKey.githubLogin.name);
       final name = await storage.read(key: SecureStorageKey.githubName.name);
+      final accessToken = await storage.read(
+        key: SecureStorageKey.githubAccessToken.name,
+      );
 
       if (login == null || login.isEmpty) {
         throw Exception('GitHub 사용자 정보를 찾을 수 없습니다.');
@@ -62,11 +65,18 @@ class _HomePageState extends State<HomePage> {
       );
       final response = await http.get(
         uri,
-        headers: const {
+        headers: {
           'Accept': 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28',
+          if (accessToken != null && accessToken.isNotEmpty)
+            'Authorization': 'Bearer $accessToken',
         },
       );
+
+      if (response.statusCode == 401) {
+        await _handleUnauthorized();
+        return;
+      }
 
       if (response.statusCode != 200) {
         throw Exception('GitHub 활동을 불러오지 못했습니다. (${response.statusCode})');
@@ -103,6 +113,19 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _handleUnauthorized() async {
+    if (!mounted) {
+      return;
+    }
+    // TODO: githubRefreshToken을 활용해 GitHub access token 재발급 로직 추가.
+    //  현재는 임시로 강제 로그아웃 후 재로그인 유도. 재발급 성공 시에는
+    //  새 토큰을 저장하고 _loadGithubActivities를 재시도하도록 변경할 것.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('GitHub 인증이 만료되어 다시 로그인이 필요합니다.')),
+    );
+    await _logout();
+  }
+
   Future<void> _logout() async {
     if (_isLoggingOut) {
       return;
@@ -114,15 +137,11 @@ class _HomePageState extends State<HomePage> {
 
     try {
       await Supabase.instance.client.auth.signOut();
-      await SecureStorage().storage.delete(
-        key: SecureStorageKey.githubAccessToken.name,
-      );
-      await SecureStorage().storage.delete(
-        key: SecureStorageKey.githubLogin.name,
-      );
-      await SecureStorage().storage.delete(
-        key: SecureStorageKey.githubName.name,
-      );
+      final storage = SecureStorage().storage;
+      await storage.delete(key: SecureStorageKey.githubAccessToken.name);
+      await storage.delete(key: SecureStorageKey.githubRefreshToken.name);
+      await storage.delete(key: SecureStorageKey.githubLogin.name);
+      await storage.delete(key: SecureStorageKey.githubName.name);
       if (!mounted) {
         return;
       }

@@ -214,33 +214,40 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
     final login = _displayLogin(user);
     final name = _displayName(user);
-    final session = _supabase?.auth.currentSession;
-    final accessToken = session?.providerToken ?? session?.accessToken;
+    final storage = SecureStorage().storage;
 
-    if (accessToken != null) {
-      await SecureStorage().storage.write(
+    final session = _supabase?.auth.currentSession;
+    final providerToken = session?.providerToken;
+    final providerRefreshToken = session?.providerRefreshToken;
+
+    if (providerToken != null && providerToken.isNotEmpty) {
+      await storage.write(
         key: SecureStorageKey.githubAccessToken.name,
-        value: accessToken,
+        value: providerToken,
       );
     }
-    await SecureStorage().storage.write(
+    if (providerRefreshToken != null && providerRefreshToken.isNotEmpty) {
+      await storage.write(
+        key: SecureStorageKey.githubRefreshToken.name,
+        value: providerRefreshToken,
+      );
+    }
+    await storage.write(
       key: SecureStorageKey.githubLogin.name,
       value: login,
     );
-    await SecureStorage().storage.write(
+    await storage.write(
       key: SecureStorageKey.githubName.name,
       value: name ?? '',
     );
   }
 
   Future<void> _clearStoredUser() async {
-    await SecureStorage().storage.delete(
-      key: SecureStorageKey.githubAccessToken.name,
-    );
-    await SecureStorage().storage.delete(
-      key: SecureStorageKey.githubLogin.name,
-    );
-    await SecureStorage().storage.delete(key: SecureStorageKey.githubName.name);
+    final storage = SecureStorage().storage;
+    await storage.delete(key: SecureStorageKey.githubAccessToken.name);
+    await storage.delete(key: SecureStorageKey.githubRefreshToken.name);
+    await storage.delete(key: SecureStorageKey.githubLogin.name);
+    await storage.delete(key: SecureStorageKey.githubName.name);
   }
 
   String _displayLogin(User user) {
