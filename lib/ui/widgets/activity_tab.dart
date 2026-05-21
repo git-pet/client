@@ -86,6 +86,23 @@ class ActivityTab extends StatelessWidget {
       );
     }
 
+    // 패널이 펼쳐지는 260ms 동안엔 가용 높이가 헤더(~68px)보다 작은 프레임이
+    // 생긴다. 그 짧은 구간에선 헤더 렌더링을 건너뛰어 오버플로를 피한다.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxHeight < 80) {
+          return const SizedBox.shrink();
+        }
+        return _buildExpandedContent(context, theme, l10n);
+      },
+    );
+  }
+
+  Widget _buildExpandedContent(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -198,24 +215,22 @@ class ActivityTab extends StatelessWidget {
 
 String _titleForActivity(AppLocalizations l10n, String type) {
   switch (type) {
-    case 'PushEvent':
-      return l10n.activityTitlePush;
-    case 'PullRequestEvent':
-      return l10n.activityTitlePr;
-    case 'IssuesEvent':
+    case 'commit':
+      return l10n.activityTitleCommit;
+    case 'pull_request':
+      return l10n.activityTitlePullRequest;
+    case 'issue':
       return l10n.activityTitleIssue;
-    case 'IssueCommentEvent':
-      return l10n.activityTitleIssueComment;
-    case 'PullRequestReviewEvent':
-      return l10n.activityTitlePrReview;
-    case 'WatchEvent':
-      return l10n.activityTitleWatch;
-    case 'CreateEvent':
-      return l10n.activityTitleCreate;
-    case 'ForkEvent':
+    case 'code_review':
+      return l10n.activityTitleCodeReview;
+    case 'star':
+      return l10n.activityTitleStar;
+    case 'fork':
       return l10n.activityTitleFork;
+    case 'release':
+      return l10n.activityTitleRelease;
     default:
-      return l10n.activityTitleDefault(type.replaceAll('Event', ''));
+      return l10n.activityTitleDefault(type);
   }
 }
 
@@ -232,32 +247,35 @@ String _descriptionForActivity(
   }
 
   switch (activity.type) {
-    case 'PushEvent':
-      final commitCount = payload['size'];
+    case 'commit':
+      // webhook 적재 시 commits 배열을 그대로 보관한다고 가정. size 필드도 있을 수 있음.
       final commits = payload['commits'];
-      if (commitCount is int && commitCount > 0) {
+      final commitCount = payload['size'] is int
+          ? payload['size'] as int
+          : (commits is List ? commits.length : 0);
+      if (commitCount > 0) {
         if (commits is List && commits.isNotEmpty) {
           final firstCommit = commits.first;
           if (firstCommit is Map<String, dynamic>) {
             final message = firstCommit['message']?.toString().trim();
             if (message != null && message.isNotEmpty) {
-              return l10n.activityDescPushWithMessage(repo, commitCount, message);
+              return l10n.activityDescCommitWithMessage(repo, commitCount, message);
             }
           }
         }
-        return l10n.activityDescPushCount(repo, commitCount);
+        return l10n.activityDescCommitCount(repo, commitCount);
       }
-      return l10n.activityDescPushFallback(repo);
-    case 'PullRequestEvent':
+      return l10n.activityDescCommitFallback(repo);
+    case 'pull_request':
       final action = payload['action']?.toString() ?? 'updated';
       final pullRequest = payload['pull_request'];
       final title = pullRequest is Map<String, dynamic>
           ? pullRequest['title']?.toString()
           : null;
       return (title == null || title.isEmpty)
-          ? l10n.activityDescPrNoTitle(repo, action)
-          : l10n.activityDescPrWithTitle(repo, action, title);
-    case 'IssuesEvent':
+          ? l10n.activityDescPullRequestNoTitle(repo, action)
+          : l10n.activityDescPullRequestWithTitle(repo, action, title);
+    case 'issue':
       final action = payload['action']?.toString() ?? 'updated';
       final issue = payload['issue'];
       final title = issue is Map<String, dynamic>
@@ -266,30 +284,24 @@ String _descriptionForActivity(
       return (title == null || title.isEmpty)
           ? l10n.activityDescIssueNoTitle(repo, action)
           : l10n.activityDescIssueWithTitle(repo, action, title);
-    case 'IssueCommentEvent':
-      final issue = payload['issue'];
-      final title = issue is Map<String, dynamic>
-          ? issue['title']?.toString()
-          : null;
-      return (title == null || title.isEmpty)
-          ? l10n.activityDescIssueCommentNoTitle(repo)
-          : l10n.activityDescIssueCommentWithTitle(repo, title);
-    case 'PullRequestReviewEvent':
+    case 'code_review':
       final review = payload['review'];
       final state = review is Map<String, dynamic>
           ? review['state']?.toString()
           : null;
-      return l10n.activityDescPrReview(repo, state ?? 'submitted');
-    case 'WatchEvent':
-      return l10n.activityDescWatch(repo);
-    case 'CreateEvent':
-      final refType = payload['ref_type']?.toString() ?? 'resource';
-      final ref = payload['ref']?.toString();
-      return (ref == null || ref.isEmpty)
-          ? l10n.activityDescCreateNoRef(repo, refType)
-          : l10n.activityDescCreateWithRef(repo, refType, ref);
-    case 'ForkEvent':
+      return l10n.activityDescCodeReview(repo, state ?? 'submitted');
+    case 'star':
+      return l10n.activityDescStar(repo);
+    case 'fork':
       return l10n.activityDescFork(repo);
+    case 'release':
+      final release = payload['release'];
+      final tag = release is Map<String, dynamic>
+          ? (release['tag_name'] ?? release['name'])?.toString()
+          : null;
+      return (tag == null || tag.isEmpty)
+          ? l10n.activityDescReleaseNoTag(repo)
+          : l10n.activityDescReleaseWithTag(repo, tag);
     default:
       return repo;
   }
@@ -297,20 +309,20 @@ String _descriptionForActivity(
 
 IconData _iconForActivity(String type) {
   switch (type) {
-    case 'PushEvent':
+    case 'commit':
       return Icons.upload_rounded;
-    case 'PullRequestEvent':
+    case 'pull_request':
       return Icons.merge_type_rounded;
-    case 'IssuesEvent':
+    case 'issue':
       return Icons.error_outline_rounded;
-    case 'IssueCommentEvent':
-      return Icons.chat_bubble_outline_rounded;
-    case 'PullRequestReviewEvent':
+    case 'code_review':
       return Icons.rate_review_outlined;
-    case 'WatchEvent':
+    case 'star':
       return Icons.star_border_rounded;
-    case 'ForkEvent':
+    case 'fork':
       return Icons.call_split_rounded;
+    case 'release':
+      return Icons.local_offer_outlined;
     default:
       return Icons.bolt_rounded;
   }
@@ -318,22 +330,20 @@ IconData _iconForActivity(String type) {
 
 Color _colorForActivity(String type) {
   switch (type) {
-    case 'PushEvent':
+    case 'commit':
       return const Color(0xFF4FC3F7);
-    case 'PullRequestEvent':
+    case 'pull_request':
       return const Color(0xFFB388FF);
-    case 'IssuesEvent':
+    case 'issue':
       return const Color(0xFFFF8A65);
-    case 'IssueCommentEvent':
-      return const Color(0xFF4DD0E1);
-    case 'PullRequestReviewEvent':
+    case 'code_review':
       return const Color(0xFF81C784);
-    case 'WatchEvent':
+    case 'star':
       return const Color(0xFFFFD54F);
-    case 'CreateEvent':
-      return const Color(0xFF00897B);
-    case 'ForkEvent':
+    case 'fork':
       return const Color(0xFFF06292);
+    case 'release':
+      return const Color(0xFF00897B);
     default:
       return const Color(0xFFB0BEC5);
   }

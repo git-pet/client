@@ -392,17 +392,17 @@ abstract class AppLocalizations {
   /// **'Unknown repository'**
   String get homeUnknownRepo;
 
-  /// No description provided for @activityTitlePush.
+  /// No description provided for @activityTitleCommit.
   ///
   /// In en, this message translates to:
   /// **'Pushed commits'**
-  String get activityTitlePush;
+  String get activityTitleCommit;
 
-  /// No description provided for @activityTitlePr.
+  /// No description provided for @activityTitlePullRequest.
   ///
   /// In en, this message translates to:
   /// **'Pull request activity'**
-  String get activityTitlePr;
+  String get activityTitlePullRequest;
 
   /// No description provided for @activityTitleIssue.
   ///
@@ -410,29 +410,17 @@ abstract class AppLocalizations {
   /// **'Issue activity'**
   String get activityTitleIssue;
 
-  /// No description provided for @activityTitleIssueComment.
-  ///
-  /// In en, this message translates to:
-  /// **'Left an issue comment'**
-  String get activityTitleIssueComment;
-
-  /// No description provided for @activityTitlePrReview.
+  /// No description provided for @activityTitleCodeReview.
   ///
   /// In en, this message translates to:
   /// **'Reviewed a pull request'**
-  String get activityTitlePrReview;
+  String get activityTitleCodeReview;
 
-  /// No description provided for @activityTitleWatch.
+  /// No description provided for @activityTitleStar.
   ///
   /// In en, this message translates to:
   /// **'Starred a repository'**
-  String get activityTitleWatch;
-
-  /// No description provided for @activityTitleCreate.
-  ///
-  /// In en, this message translates to:
-  /// **'Created a branch or tag'**
-  String get activityTitleCreate;
+  String get activityTitleStar;
 
   /// No description provided for @activityTitleFork.
   ///
@@ -440,41 +428,51 @@ abstract class AppLocalizations {
   /// **'Forked a repository'**
   String get activityTitleFork;
 
+  /// No description provided for @activityTitleRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Published a release'**
+  String get activityTitleRelease;
+
   /// No description provided for @activityTitleDefault.
   ///
   /// In en, this message translates to:
   /// **'{type} activity'**
   String activityTitleDefault(String type);
 
-  /// No description provided for @activityDescPushWithMessage.
+  /// No description provided for @activityDescCommitWithMessage.
   ///
   /// In en, this message translates to:
   /// **'{repo} · {count} commits · {message}'**
-  String activityDescPushWithMessage(String repo, int count, String message);
+  String activityDescCommitWithMessage(String repo, int count, String message);
 
-  /// No description provided for @activityDescPushCount.
+  /// No description provided for @activityDescCommitCount.
   ///
   /// In en, this message translates to:
   /// **'{repo} · {count} commits pushed'**
-  String activityDescPushCount(String repo, int count);
+  String activityDescCommitCount(String repo, int count);
 
-  /// No description provided for @activityDescPushFallback.
+  /// No description provided for @activityDescCommitFallback.
   ///
   /// In en, this message translates to:
   /// **'Pushed commits to {repo}.'**
-  String activityDescPushFallback(String repo);
+  String activityDescCommitFallback(String repo);
 
-  /// No description provided for @activityDescPrWithTitle.
+  /// No description provided for @activityDescPullRequestWithTitle.
   ///
   /// In en, this message translates to:
   /// **'{repo} · PR {action} · {title}'**
-  String activityDescPrWithTitle(String repo, String action, String title);
+  String activityDescPullRequestWithTitle(
+    String repo,
+    String action,
+    String title,
+  );
 
-  /// No description provided for @activityDescPrNoTitle.
+  /// No description provided for @activityDescPullRequestNoTitle.
   ///
   /// In en, this message translates to:
   /// **'{repo} · PR {action}'**
-  String activityDescPrNoTitle(String repo, String action);
+  String activityDescPullRequestNoTitle(String repo, String action);
 
   /// No description provided for @activityDescIssueWithTitle.
   ///
@@ -488,47 +486,35 @@ abstract class AppLocalizations {
   /// **'{repo} · issue {action}'**
   String activityDescIssueNoTitle(String repo, String action);
 
-  /// No description provided for @activityDescIssueCommentWithTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{repo} · comment · {title}'**
-  String activityDescIssueCommentWithTitle(String repo, String title);
-
-  /// No description provided for @activityDescIssueCommentNoTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{repo} · comment'**
-  String activityDescIssueCommentNoTitle(String repo);
-
-  /// No description provided for @activityDescPrReview.
+  /// No description provided for @activityDescCodeReview.
   ///
   /// In en, this message translates to:
   /// **'{repo} · review {state}'**
-  String activityDescPrReview(String repo, String state);
+  String activityDescCodeReview(String repo, String state);
 
-  /// No description provided for @activityDescWatch.
+  /// No description provided for @activityDescStar.
   ///
   /// In en, this message translates to:
   /// **'{repo} · star'**
-  String activityDescWatch(String repo);
-
-  /// No description provided for @activityDescCreateWithRef.
-  ///
-  /// In en, this message translates to:
-  /// **'{repo} · {refType} created · {ref}'**
-  String activityDescCreateWithRef(String repo, String refType, String ref);
-
-  /// No description provided for @activityDescCreateNoRef.
-  ///
-  /// In en, this message translates to:
-  /// **'{repo} · {refType} created'**
-  String activityDescCreateNoRef(String repo, String refType);
+  String activityDescStar(String repo);
 
   /// No description provided for @activityDescFork.
   ///
   /// In en, this message translates to:
   /// **'{repo} · fork created'**
   String activityDescFork(String repo);
+
+  /// No description provided for @activityDescReleaseWithTag.
+  ///
+  /// In en, this message translates to:
+  /// **'{repo} · release {tag}'**
+  String activityDescReleaseWithTag(String repo, String tag);
+
+  /// No description provided for @activityDescReleaseNoTag.
+  ///
+  /// In en, this message translates to:
+  /// **'{repo} · release published'**
+  String activityDescReleaseNoTag(String repo);
 
   /// No description provided for @relativeJustNow.
   ///

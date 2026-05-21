@@ -166,28 +166,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeUnknownRepo => '알 수 없는 저장소';
 
   @override
-  String get activityTitlePush => '커밋을 푸시했어요';
+  String get activityTitleCommit => '커밋을 푸시했어요';
 
   @override
-  String get activityTitlePr => 'PR 활동이 있어요';
+  String get activityTitlePullRequest => 'PR 활동이 있어요';
 
   @override
   String get activityTitleIssue => '이슈 활동이 있어요';
 
   @override
-  String get activityTitleIssueComment => '이슈 댓글을 남겼어요';
+  String get activityTitleCodeReview => 'PR 리뷰를 남겼어요';
 
   @override
-  String get activityTitlePrReview => 'PR 리뷰를 남겼어요';
-
-  @override
-  String get activityTitleWatch => '저장소에 스타를 눌렀어요';
-
-  @override
-  String get activityTitleCreate => '브랜치 또는 태그를 생성했어요';
+  String get activityTitleStar => '저장소에 스타를 눌렀어요';
 
   @override
   String get activityTitleFork => '저장소를 포크했어요';
+
+  @override
+  String get activityTitleRelease => '릴리즈를 게시했어요';
 
   @override
   String activityTitleDefault(String type) {
@@ -195,27 +192,31 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String activityDescPushWithMessage(String repo, int count, String message) {
+  String activityDescCommitWithMessage(String repo, int count, String message) {
     return '$repo · $count개 커밋 · $message';
   }
 
   @override
-  String activityDescPushCount(String repo, int count) {
+  String activityDescCommitCount(String repo, int count) {
     return '$repo · $count개 커밋 푸시';
   }
 
   @override
-  String activityDescPushFallback(String repo) {
+  String activityDescCommitFallback(String repo) {
     return '$repo에 커밋을 푸시했습니다.';
   }
 
   @override
-  String activityDescPrWithTitle(String repo, String action, String title) {
+  String activityDescPullRequestWithTitle(
+    String repo,
+    String action,
+    String title,
+  ) {
     return '$repo · PR $action · $title';
   }
 
   @override
-  String activityDescPrNoTitle(String repo, String action) {
+  String activityDescPullRequestNoTitle(String repo, String action) {
     return '$repo · PR $action';
   }
 
@@ -230,38 +231,28 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String activityDescIssueCommentWithTitle(String repo, String title) {
-    return '$repo · 댓글 작성 · $title';
-  }
-
-  @override
-  String activityDescIssueCommentNoTitle(String repo) {
-    return '$repo · 댓글 작성';
-  }
-
-  @override
-  String activityDescPrReview(String repo, String state) {
+  String activityDescCodeReview(String repo, String state) {
     return '$repo · 리뷰 $state';
   }
 
   @override
-  String activityDescWatch(String repo) {
+  String activityDescStar(String repo) {
     return '$repo · star';
-  }
-
-  @override
-  String activityDescCreateWithRef(String repo, String refType, String ref) {
-    return '$repo · $refType 생성 · $ref';
-  }
-
-  @override
-  String activityDescCreateNoRef(String repo, String refType) {
-    return '$repo · $refType 생성';
   }
 
   @override
   String activityDescFork(String repo) {
     return '$repo · 포크 생성';
+  }
+
+  @override
+  String activityDescReleaseWithTag(String repo, String tag) {
+    return '$repo · 릴리즈 $tag';
+  }
+
+  @override
+  String activityDescReleaseNoTag(String repo) {
+    return '$repo · 릴리즈 게시';
   }
 
   @override

@@ -174,28 +174,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeUnknownRepo => 'Unknown repository';
 
   @override
-  String get activityTitlePush => 'Pushed commits';
+  String get activityTitleCommit => 'Pushed commits';
 
   @override
-  String get activityTitlePr => 'Pull request activity';
+  String get activityTitlePullRequest => 'Pull request activity';
 
   @override
   String get activityTitleIssue => 'Issue activity';
 
   @override
-  String get activityTitleIssueComment => 'Left an issue comment';
+  String get activityTitleCodeReview => 'Reviewed a pull request';
 
   @override
-  String get activityTitlePrReview => 'Reviewed a pull request';
-
-  @override
-  String get activityTitleWatch => 'Starred a repository';
-
-  @override
-  String get activityTitleCreate => 'Created a branch or tag';
+  String get activityTitleStar => 'Starred a repository';
 
   @override
   String get activityTitleFork => 'Forked a repository';
+
+  @override
+  String get activityTitleRelease => 'Published a release';
 
   @override
   String activityTitleDefault(String type) {
@@ -203,27 +200,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String activityDescPushWithMessage(String repo, int count, String message) {
+  String activityDescCommitWithMessage(String repo, int count, String message) {
     return '$repo · $count commits · $message';
   }
 
   @override
-  String activityDescPushCount(String repo, int count) {
+  String activityDescCommitCount(String repo, int count) {
     return '$repo · $count commits pushed';
   }
 
   @override
-  String activityDescPushFallback(String repo) {
+  String activityDescCommitFallback(String repo) {
     return 'Pushed commits to $repo.';
   }
 
   @override
-  String activityDescPrWithTitle(String repo, String action, String title) {
+  String activityDescPullRequestWithTitle(
+    String repo,
+    String action,
+    String title,
+  ) {
     return '$repo · PR $action · $title';
   }
 
   @override
-  String activityDescPrNoTitle(String repo, String action) {
+  String activityDescPullRequestNoTitle(String repo, String action) {
     return '$repo · PR $action';
   }
 
@@ -238,38 +239,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String activityDescIssueCommentWithTitle(String repo, String title) {
-    return '$repo · comment · $title';
-  }
-
-  @override
-  String activityDescIssueCommentNoTitle(String repo) {
-    return '$repo · comment';
-  }
-
-  @override
-  String activityDescPrReview(String repo, String state) {
+  String activityDescCodeReview(String repo, String state) {
     return '$repo · review $state';
   }
 
   @override
-  String activityDescWatch(String repo) {
+  String activityDescStar(String repo) {
     return '$repo · star';
-  }
-
-  @override
-  String activityDescCreateWithRef(String repo, String refType, String ref) {
-    return '$repo · $refType created · $ref';
-  }
-
-  @override
-  String activityDescCreateNoRef(String repo, String refType) {
-    return '$repo · $refType created';
   }
 
   @override
   String activityDescFork(String repo) {
     return '$repo · fork created';
+  }
+
+  @override
+  String activityDescReleaseWithTag(String repo, String tag) {
+    return '$repo · release $tag';
+  }
+
+  @override
+  String activityDescReleaseNoTag(String repo) {
+    return '$repo · release published';
   }
 
   @override
