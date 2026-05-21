@@ -70,48 +70,47 @@
   "homeActivityEmpty": "No public activity to show yet.",
   "homeUnknownRepo": "Unknown repository",
 
-  "activityTitlePush": "Pushed commits",
-  "activityTitlePr": "Pull request activity",
+  "activityTitleCommit": "Pushed commits",
+  "activityTitlePullRequest": "Pull request activity",
   "activityTitleIssue": "Issue activity",
-  "activityTitleIssueComment": "Left an issue comment",
-  "activityTitlePrReview": "Reviewed a pull request",
-  "activityTitleWatch": "Starred a repository",
-  "activityTitleCreate": "Created a branch or tag",
+  "activityTitleCodeReview": "Reviewed a pull request",
+  "activityTitleStar": "Starred a repository",
   "activityTitleFork": "Forked a repository",
+  "activityTitleRelease": "Published a release",
   "activityTitleDefault": "{type} activity",
   "@activityTitleDefault": {
     "placeholders": { "type": { "type": "String" } }
   },
 
-  "activityDescPushWithMessage": "{repo} · {count} commits · {message}",
-  "@activityDescPushWithMessage": {
+  "activityDescCommitWithMessage": "{repo} · {count} commits · {message}",
+  "@activityDescCommitWithMessage": {
     "placeholders": {
       "repo": { "type": "String" },
       "count": { "type": "int" },
       "message": { "type": "String" }
     }
   },
-  "activityDescPushCount": "{repo} · {count} commits pushed",
-  "@activityDescPushCount": {
+  "activityDescCommitCount": "{repo} · {count} commits pushed",
+  "@activityDescCommitCount": {
     "placeholders": {
       "repo": { "type": "String" },
       "count": { "type": "int" }
     }
   },
-  "activityDescPushFallback": "Pushed commits to {repo}.",
-  "@activityDescPushFallback": {
+  "activityDescCommitFallback": "Pushed commits to {repo}.",
+  "@activityDescCommitFallback": {
     "placeholders": { "repo": { "type": "String" } }
   },
-  "activityDescPrWithTitle": "{repo} · PR {action} · {title}",
-  "@activityDescPrWithTitle": {
+  "activityDescPullRequestWithTitle": "{repo} · PR {action} · {title}",
+  "@activityDescPullRequestWithTitle": {
     "placeholders": {
       "repo": { "type": "String" },
       "action": { "type": "String" },
       "title": { "type": "String" }
     }
   },
-  "activityDescPrNoTitle": "{repo} · PR {action}",
-  "@activityDescPrNoTitle": {
+  "activityDescPullRequestNoTitle": "{repo} · PR {action}",
+  "@activityDescPullRequestNoTitle": {
     "placeholders": {
       "repo": { "type": "String" },
       "action": { "type": "String" }
@@ -132,47 +131,63 @@
       "action": { "type": "String" }
     }
   },
-  "activityDescIssueCommentWithTitle": "{repo} · comment · {title}",
-  "@activityDescIssueCommentWithTitle": {
-    "placeholders": {
-      "repo": { "type": "String" },
-      "title": { "type": "String" }
-    }
-  },
-  "activityDescIssueCommentNoTitle": "{repo} · comment",
-  "@activityDescIssueCommentNoTitle": {
-    "placeholders": { "repo": { "type": "String" } }
-  },
-  "activityDescPrReview": "{repo} · review {state}",
-  "@activityDescPrReview": {
+  "activityDescCodeReview": "{repo} · review {state}",
+  "@activityDescCodeReview": {
     "placeholders": {
       "repo": { "type": "String" },
       "state": { "type": "String" }
     }
   },
-  "activityDescWatch": "{repo} · star",
-  "@activityDescWatch": {
+  "activityDescStar": "{repo} · star",
+  "@activityDescStar": {
     "placeholders": { "repo": { "type": "String" } }
-  },
-  "activityDescCreateWithRef": "{repo} · {refType} created · {ref}",
-  "@activityDescCreateWithRef": {
-    "placeholders": {
-      "repo": { "type": "String" },
-      "refType": { "type": "String" },
-      "ref": { "type": "String" }
-    }
-  },
-  "activityDescCreateNoRef": "{repo} · {refType} created",
-  "@activityDescCreateNoRef": {
-    "placeholders": {
-      "repo": { "type": "String" },
-      "refType": { "type": "String" }
-    }
   },
   "activityDescFork": "{repo} · fork created",
   "@activityDescFork": {
     "placeholders": { "repo": { "type": "String" } }
   },
+  "activityDescReleaseWithTag": "{repo} · release {tag}",
+  "@activityDescReleaseWithTag": {
+    "placeholders": {
+      "repo": { "type": "String" },
+      "tag": { "type": "String" }
+    }
+  },
+  "activityDescReleaseNoTag": "{repo} · release published",
+  "@activityDescReleaseNoTag": {
+    "placeholders": { "repo": { "type": "String" } }
+  },
+
+  "friendsCollapsedHint": "Expand the tab to load your friends.",
+  "friendsLoadError": "Could not load friends.",
+  "friendsRetry": "Try again",
+  "friendsSectionIncoming": "Incoming requests",
+  "friendsSectionFriends": "Friends",
+  "friendsSectionOutgoing": "Sent requests",
+  "friendsEmpty": "You don't have any friends yet. Add some from search!",
+  "friendsActionAccept": "Accept",
+  "friendsActionReject": "Reject",
+  "friendsActionCancel": "Cancel",
+  "friendsActionRemove": "Remove",
+  "friendsAddTitle": "Add a friend",
+  "friendsSearchHint": "Search by username",
+  "friendsSearchEmpty": "No matching users found.",
+  "friendsSearchPrompt": "Type a username to search.",
+  "friendsRequestSent": "Friend request sent.",
+  "friendsAlreadyExists": "Already friends or request pending.",
+  "friendsSelfBlocked": "You can't send a request to yourself.",
+  "friendsSendFailed": "Could not send request: {reason}",
+  "@friendsSendFailed": {
+    "placeholders": { "reason": { "type": "String" } }
+  },
+  "friendsAcceptFailed": "Could not accept request.",
+  "friendsRemoveConfirmTitle": "Remove friend?",
+  "friendsRemoveConfirmBody": "Are you sure you want to remove {username}?",
+  "@friendsRemoveConfirmBody": {
+    "placeholders": { "username": { "type": "String" } }
+  },
+  "friendsRemoveConfirmAccept": "Remove",
+  "friendsRemoveConfirmCancel": "Cancel",
 
   "relativeJustNow": "Just now",
   "relativeMinutes": "{minutes, plural, =1{1 minute ago} other{{minutes} minutes ago}}",
