@@ -1,13 +1,17 @@
-import 'dart:convert';
-
-import 'package:client/config/app_locale.dart';
 import 'package:client/l10n/app_localizations.dart';
+import 'package:client/models/github_activity.dart';
 import 'package:client/models/pet.dart';
-import 'package:client/ui/widgets/sprite_animator.dart';
+import 'package:client/services/github_service.dart';
+import 'package:client/ui/widgets/activity_tab.dart';
+import 'package:client/ui/widgets/home_header.dart';
+import 'package:client/ui/widgets/home_tab_section.dart';
+import 'package:client/ui/widgets/pet_room_card.dart';
+import 'package:client/ui/widgets/placeholder_tab_content.dart';
+import 'package:client/ui/widgets/sheets/home_settings_sheet.dart';
+import 'package:client/ui/widgets/sheets/language_selector_sheet.dart';
+import 'package:client/ui/widgets/sheets/pet_selector_sheet.dart';
 import 'package:client/utils/secure_storage.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,7 +24,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const _githubApiBaseUrl = 'https://api.github.com';
+  static const _tabPanelGap = 18.0;
+  static const _collapsedTabPanelHeight = 172.0;
+  static const _expandedTabPanelRatio = 0.6;
+
+  final GithubService _githubService = GithubService();
 
   List<String> _tabs(AppLocalizations l10n) => [
     l10n.homeTabActivity,
@@ -38,7 +46,6 @@ class _HomePageState extends State<HomePage> {
   String? _activityError;
   List<GithubActivity> _activities = const [];
 
-  // Pet state
   PetType _petType = PetType.classicalCat;
   PetMood _mood = PetMood.idle;
 
@@ -57,81 +64,43 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final storage = SecureStorage().storage;
-      final login = await storage.read(key: SecureStorageKey.githubLogin.name);
-      final name = await storage.read(key: SecureStorageKey.githubName.name);
-      final accessToken = await storage.read(
-        key: SecureStorageKey.githubAccessToken.name,
-      );
-
-      if (login == null || login.isEmpty) {
-        if (mounted) {
-          throw Exception(AppLocalizations.of(context).homeActivityUserNotFound);
-        }
-        return;
-      }
-
-      final uri = Uri.parse(
-        '$_githubApiBaseUrl/users/$login/events/public?per_page=20',
-      );
-      final response = await http.get(
-        uri,
-        headers: {
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
-          if (accessToken != null && accessToken.isNotEmpty)
-            'Authorization': 'Bearer $accessToken',
-        },
-      );
-
-      if (response.statusCode == 401) {
-        await _handleUnauthorized();
-        return;
-      }
-
-      if (response.statusCode != 200) {
-        if (!mounted) return;
-        throw Exception(
-          AppLocalizations.of(context).homeActivityFetchFailed(response.statusCode),
-        );
-      }
-
-      final decoded = jsonDecode(response.body);
-      if (decoded is! List) {
-        if (!mounted) return;
-        throw Exception(AppLocalizations.of(context).homeActivityInvalidResponse);
-      }
-
-      final activities = decoded
-          .whereType<Map<String, dynamic>>()
-          .map(GithubActivity.fromJson)
-          .toList();
-
-      if (!mounted) {
-        return;
-      }
-
+      final feed = await _githubService.fetchPublicActivities();
+      if (!mounted) return;
       setState(() {
-        _githubLogin = login;
-        _githubName = (name != null && name.isNotEmpty) ? name : login;
-        _activities = activities;
+        _githubLogin = feed.login;
+        _githubName = feed.name;
+        _activities = feed.activities;
         _isLoadingActivities = false;
       });
+    } on GithubAuthRequiredException {
+      await _handleUnauthorized();
+    } on GithubUserNotConfiguredException {
+      _setActivityError(
+        AppLocalizations.of(context).homeActivityUserNotFound,
+      );
+    } on GithubApiException catch (e) {
+      _setActivityError(
+        AppLocalizations.of(context).homeActivityFetchFailed(e.statusCode),
+      );
+    } on GithubInvalidResponseException {
+      _setActivityError(
+        AppLocalizations.of(context).homeActivityInvalidResponse,
+      );
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _activityError = error.toString().replaceFirst('Exception: ', '');
-        _isLoadingActivities = false;
-      });
+      _setActivityError(error.toString().replaceFirst('Exception: ', ''));
     }
   }
 
+  void _setActivityError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _activityError = message;
+      _isLoadingActivities = false;
+    });
+  }
+
   Future<void> _handleUnauthorized() async {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     // TODO: githubRefreshToken을 활용해 GitHub access token 재발급 로직 추가.
     //  현재는 임시로 강제 로그아웃 후 재로그인 유도. 재발급 성공 시에는
     //  새 토큰을 저장하고 _loadGithubActivities를 재시도하도록 변경할 것.
@@ -142,9 +111,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _logout() async {
-    if (_isLoggingOut) {
-      return;
-    }
+    if (_isLoggingOut) return;
 
     setState(() {
       _isLoggingOut = true;
@@ -152,19 +119,11 @@ class _HomePageState extends State<HomePage> {
 
     try {
       await Supabase.instance.client.auth.signOut();
-      final storage = SecureStorage().storage;
-      await storage.delete(key: SecureStorageKey.githubAccessToken.name);
-      await storage.delete(key: SecureStorageKey.githubRefreshToken.name);
-      await storage.delete(key: SecureStorageKey.githubLogin.name);
-      await storage.delete(key: SecureStorageKey.githubName.name);
-      if (!mounted) {
-        return;
-      }
+      await SecureStorage().clearGithubCredentials();
+      if (!mounted) return;
       widget.onLogout?.call();
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).homeLogoutFailed)),
       );
@@ -177,403 +136,65 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  static const List<Locale?> _supportedLanguageChoices = [
-    null,
-    Locale('ko'),
-    Locale('en'),
-  ];
-
-  String _currentLocaleLabel(AppLocalizations l10n, Locale? locale) {
-    if (locale == null) return l10n.homeLanguageSystem;
-    switch (locale.languageCode) {
-      case 'ko':
-        return '한국어';
-      case 'en':
-        return 'English';
-      default:
-        return locale.languageCode;
+  Future<void> _openSettings() async {
+    final action = await showHomeSettingsSheet(context, currentPet: _petType);
+    if (action == null || !mounted) return;
+    switch (action) {
+      case HomeSettingsAction.changePet:
+        await _pickPet();
+        break;
+      case HomeSettingsAction.changeLanguage:
+        await showLanguageSelectorSheet(context);
+        break;
+      case HomeSettingsAction.logout:
+        await _logout();
+        break;
     }
   }
 
-  Future<void> _showLanguageSelector() async {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: ValueListenableBuilder<Locale?>(
-            valueListenable: AppLocale.notifier,
-            builder: (context, currentLocale, _) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      l10n.homeLanguageSelectorTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._supportedLanguageChoices.map((locale) {
-                      final selected =
-                          currentLocale?.languageCode == locale?.languageCode;
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
-                        ),
-                        leading: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? colors.primary.withValues(alpha: 0.25)
-                                : colors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            Icons.language_rounded,
-                            color: selected
-                                ? colors.primary
-                                : Colors.white54,
-                          ),
-                        ),
-                        title: Text(
-                          _currentLocaleLabel(l10n, locale),
-                          style: TextStyle(
-                            color: selected ? colors.primary : Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        trailing: selected
-                            ? Icon(
-                                Icons.check_circle_rounded,
-                                color: colors.primary,
-                              )
-                            : null,
-                        onTap: () async {
-                          await AppLocale.setLocale(locale);
-                          if (!sheetContext.mounted) return;
-                          Navigator.of(sheetContext).pop();
-                        },
-                      );
-                    }),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
+  Future<void> _pickPet() async {
+    final selected = await showPetSelectorSheet(context, currentPet: _petType);
+    if (selected == null || !mounted) return;
+    setState(() {
+      _petType = selected;
+      _mood = PetMood.idle;
+    });
   }
 
-  Future<void> _showPetSelector() async {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: colors.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: DraggableScrollableSheet(
-            initialChildSize: 0.6,
-            minChildSize: 0.3,
-            maxChildSize: 0.85,
-            expand: false,
-            builder: (context, scrollController) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      l10n.homePetSelectorTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        itemCount: PetType.values.length,
-                        itemBuilder: (context, index) {
-                          final pet = PetType.values[index];
-                          final selected = pet == _petType;
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
-                            ),
-                            leading: Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: selected
-                                    ? colors.primary.withValues(alpha: 0.25)
-                                    : colors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Icon(
-                                Icons.pets_rounded,
-                                color: selected
-                                    ? colors.primary
-                                    : Colors.white54,
-                              ),
-                            ),
-                            title: Text(
-                              pet.displayName,
-                              style: TextStyle(
-                                color: selected
-                                    ? colors.primary
-                                    : Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            subtitle: Text(
-                              '${pet.frameSize}px',
-                              style: const TextStyle(color: Colors.white38),
-                            ),
-                            trailing: selected
-                                ? Icon(
-                                    Icons.check_circle_rounded,
-                                    color: colors.primary,
-                                  )
-                                : null,
-                            onTap: () {
-                              setState(() {
-                                _petType = pet;
-                                _mood = PetMood.idle;
-                              });
-                              Navigator.of(sheetContext).pop();
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
+  void _collapseTabPanel() {
+    if (_isTabPanelExpanded) {
+      setState(() => _isTabPanelExpanded = false);
+    }
   }
 
-  Future<void> _openSettings() async {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
+  void _selectTab(int index) {
+    setState(() {
+      _selectedTabIndex = index;
+      _isTabPanelExpanded = true;
+    });
+  }
 
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.homeSettingsTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.homeSettingsDescription,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white54,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                if (kDebugMode) ...[
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    leading: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: colors.primary.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(Icons.pets_rounded, color: colors.primary),
-                    ),
-                    title: Text(
-                      l10n.homeSettingsPetChange,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    subtitle: Text(
-                      _petType.displayName,
-                      style: const TextStyle(color: Colors.white54),
-                    ),
-                    trailing: const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.white38,
-                    ),
-                    onTap: () async {
-                      Navigator.of(sheetContext).pop();
-                      await _showPetSelector();
-                    },
-                  ),
-                  const Divider(color: Colors.white12),
-                ],
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  leading: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(Icons.language_rounded, color: colors.primary),
-                  ),
-                  title: Text(
-                    l10n.homeSettingsLanguage,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  subtitle: Text(
-                    _currentLocaleLabel(l10n, AppLocale.notifier.value),
-                    style: const TextStyle(color: Colors.white54),
-                  ),
-                  trailing: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.white38,
-                  ),
-                  onTap: () async {
-                    Navigator.of(sheetContext).pop();
-                    await _showLanguageSelector();
-                  },
-                ),
-                const Divider(color: Colors.white12),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  leading: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(Icons.logout_rounded, color: colors.primary),
-                  ),
-                  title: Text(
-                    l10n.homeSettingsLogout,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  subtitle: Text(
-                    l10n.homeSettingsLogoutDescription,
-                    style: const TextStyle(color: Colors.white54),
-                  ),
-                  trailing: _isLoggingOut
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(
-                          Icons.chevron_right_rounded,
-                          color: Colors.white38,
-                        ),
-                  onTap: _isLoggingOut
-                      ? null
-                      : () async {
-                          Navigator.of(sheetContext).pop();
-                          await _logout();
-                        },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+  Widget _buildTabContent(BoxConstraints contentConstraints, List<String> tabs) {
+    if (_selectedTabIndex == 0) {
+      return ActivityTab(
+        isExpanded: _isTabPanelExpanded,
+        isLoading: _isLoadingActivities,
+        githubName: _githubName,
+        githubLogin: _githubLogin,
+        error: _activityError,
+        activities: _activities,
+        onRetry: _loadGithubActivities,
+      );
+    }
+    return PlaceholderTabContent(
+      label: tabs[_selectedTabIndex],
+      isExpanded: _isTabPanelExpanded,
+      contentConstraints: contentConstraints,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
     final tabs = _tabs(l10n);
 
@@ -583,7 +204,7 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
           child: Column(
             children: [
-              _HomeHeader(
+              HomeHeader(
                 isLoggingOut: _isLoggingOut,
                 onOpenSettings: _openSettings,
               ),
@@ -591,246 +212,31 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    const gap = 18.0;
-                    final collapsedPanelHeight = 172.0;
-                    final expandedPanelHeight = constraints.maxHeight * 0.6;
                     final panelHeight = _isTabPanelExpanded
-                        ? expandedPanelHeight
-                        : collapsedPanelHeight;
+                        ? constraints.maxHeight * _expandedTabPanelRatio
+                        : _collapsedTabPanelHeight;
                     final petRoomHeight =
-                        constraints.maxHeight - panelHeight - gap;
+                        constraints.maxHeight - panelHeight - _tabPanelGap;
 
                     return Column(
                       children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 260),
-                          curve: Curves.easeOutCubic,
+                        PetRoomCard(
                           height: petRoomHeight,
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(28),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                colors.secondaryContainer,
-                                colors.surface,
-                                colors.surface,
-                              ],
-                            ),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.08),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.primary.withValues(alpha: 0.08),
-                                blurRadius: 30,
-                                offset: const Offset(0, 16),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.homePetRoomTitle,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    if (_isTabPanelExpanded) {
-                                      setState(() {
-                                        _isTabPanelExpanded = false;
-                                      });
-                                    }
-                                  },
-                                  child: Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(24),
-                                      color: Colors.white.withValues(
-                                        alpha: 0.04,
-                                      ),
-                                      border: Border.all(
-                                        color: colors.primary.withValues(
-                                          alpha: 0.25,
-                                        ),
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(24),
-                                      child: Stack(
-                                        children: [
-                                          // Background image
-                                          Positioned.fill(
-                                            child: Image.asset(
-                                              'assets/images/backgrounds/Classic/1.png',
-                                              fit: BoxFit.cover,
-                                              filterQuality: FilterQuality.none,
-                                            ),
-                                          ),
-                                          // Pet sprite
-                                          Center(
-                                            child: SpriteAnimator(
-                                              assetPath: _petType.spritePath(
-                                                _sprite.fileName,
-                                              ),
-                                              frameCount: _sprite.frameCount,
-                                              size: _petType.frameSize <= 16
-                                                  ? 64
-                                                  : 96,
-                                              fps: 6,
-                                            ),
-                                          ),
-                                          // Debug mood selector
-                                          if (kDebugMode)
-                                            Positioned(
-                                              bottom: 8,
-                                              left: 8,
-                                              right: 8,
-                                              child: _DebugMoodSelector(
-                                                current: _mood,
-                                                petType: _petType,
-                                                onChanged: (m) =>
-                                                    setState(() => _mood = m),
-                                              ),
-                                            ),
-                                          // Expand hint
-                                          if (_isTabPanelExpanded)
-                                            Positioned(
-                                              bottom: 8,
-                                              left: 0,
-                                              right: 0,
-                                              child: Text(
-                                                l10n.homeTabCollapseHint,
-                                                textAlign: TextAlign.center,
-                                                style: theme
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      color: Colors.white60,
-                                                    ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          petType: _petType,
+                          sprite: _sprite,
+                          mood: _mood,
+                          showCollapseHint: _isTabPanelExpanded,
+                          onMoodChanged: (m) => setState(() => _mood = m),
+                          onTap: _collapseTabPanel,
                         ),
-                        const SizedBox(height: gap),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 260),
-                          curve: Curves.easeOutCubic,
+                        const SizedBox(height: _tabPanelGap),
+                        HomeTabSection(
                           height: panelHeight,
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.08),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: List.generate(tabs.length, (index) {
-                                  final isSelected = _selectedTabIndex == index;
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(
-                                        right: index == tabs.length - 1
-                                            ? 0
-                                            : 8,
-                                      ),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _selectedTabIndex = index;
-                                            _isTabPanelExpanded = true;
-                                          });
-                                        },
-                                        child: AnimatedContainer(
-                                          duration: const Duration(
-                                            milliseconds: 180,
-                                          ),
-                                          curve: Curves.easeOut,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 14,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              18,
-                                            ),
-                                            color: isSelected
-                                                ? colors.primary.withValues(
-                                                    alpha: 0.18,
-                                                  )
-                                                : Colors.transparent,
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? colors.primary.withValues(
-                                                      alpha: 0.55,
-                                                    )
-                                                  : Colors.white.withValues(
-                                                      alpha: 0.06,
-                                                    ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            tabs[index],
-                                            textAlign: TextAlign.center,
-                                            style: theme.textTheme.labelLarge
-                                                ?.copyWith(
-                                                  color: isSelected
-                                                      ? colors.primary
-                                                      : Colors.white70,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ),
-                              const SizedBox(height: 12),
-                              Expanded(
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: _isTabPanelExpanded ? 16 : 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(18),
-                                    color: Colors.black.withValues(alpha: 0.18),
-                                  ),
-                                  child: LayoutBuilder(
-                                    builder: (context, contentConstraints) {
-                                      return _buildTabContent(
-                                        context,
-                                        contentConstraints,
-                                        l10n,
-                                        tabs,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          tabs: tabs,
+                          selectedIndex: _selectedTabIndex,
+                          isExpanded: _isTabPanelExpanded,
+                          onTabSelected: _selectTab,
+                          contentBuilder: (c) => _buildTabContent(c, tabs),
                         ),
                       ],
                     );
@@ -841,565 +247,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTabContent(
-    BuildContext context,
-    BoxConstraints contentConstraints,
-    AppLocalizations l10n,
-    List<String> tabs,
-  ) {
-    switch (_selectedTabIndex) {
-      case 0:
-        return _ActivityTabContent(
-          isExpanded: _isTabPanelExpanded,
-          isLoading: _isLoadingActivities,
-          githubName: _githubName,
-          githubLogin: _githubLogin,
-          error: _activityError,
-          activities: _activities,
-          onRetry: _loadGithubActivities,
-        );
-      default:
-        final theme = Theme.of(context);
-        final tabLabel = tabs[_selectedTabIndex];
-        return SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: contentConstraints.maxHeight),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  tabLabel,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (_isTabPanelExpanded) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.homeTabPlaceholder(tabLabel),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white60,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-    }
-  }
-}
-
-class GithubActivity {
-  const GithubActivity({
-    required this.type,
-    required this.repoName,
-    required this.createdAt,
-    required this.payload,
-  });
-
-  final String type;
-  final String repoName;
-  final DateTime? createdAt;
-  final Map<String, dynamic>? payload;
-
-  factory GithubActivity.fromJson(Map<String, dynamic> json) {
-    final type = (json['type'] ?? 'Event').toString();
-    final repo = json['repo'];
-    final payload = json['payload'];
-    final repoName = repo is Map<String, dynamic>
-        ? (repo['name'] ?? '').toString()
-        : '';
-    final createdAtRaw = json['created_at']?.toString();
-    final createdAt = createdAtRaw == null
-        ? null
-        : DateTime.tryParse(createdAtRaw)?.toLocal();
-
-    return GithubActivity(
-      type: type,
-      repoName: repoName,
-      createdAt: createdAt,
-      payload: payload is Map<String, dynamic> ? payload : null,
-    );
-  }
-}
-
-class _ActivityTabContent extends StatelessWidget {
-  const _ActivityTabContent({
-    required this.isExpanded,
-    required this.isLoading,
-    required this.githubName,
-    required this.githubLogin,
-    required this.error,
-    required this.activities,
-    required this.onRetry,
-  });
-
-  final bool isExpanded;
-  final bool isLoading;
-  final String? githubName;
-  final String? githubLogin;
-  final String? error;
-  final List<GithubActivity> activities;
-  final Future<void> Function() onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    if (!isExpanded) {
-      return Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.insights_rounded, color: colors.primary, size: 18),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                l10n.homeActivityCollapsedHint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.homeActivityLoadError,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              error!,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.white60,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onRetry,
-              child: Text(l10n.homeActivityRetry),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          githubName ?? l10n.homeActivityDefaultName,
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        if (githubLogin != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            l10n.homeActivityRecentSubtitle(githubLogin!),
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white60),
-          ),
-        ],
-        const SizedBox(height: 16),
-        if (activities.isEmpty)
-          Expanded(
-            child: Center(
-              child: Text(
-                l10n.homeActivityEmpty,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          )
-        else
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: onRetry,
-              child: ListView.separated(
-                itemCount: activities.length,
-                separatorBuilder: (_, index) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final activity = activities[index];
-                  final accent = _colorForActivity(activity.type);
-                  return Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.white.withValues(alpha: 0.05),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.22),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: accent.withValues(alpha: 0.18),
-                          ),
-                          child: Icon(
-                            _iconForActivity(activity.type),
-                            color: accent,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _titleForActivity(l10n, activity.type),
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _descriptionForActivity(l10n, activity),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white70,
-                                  height: 1.4,
-                                ),
-                              ),
-                              if (activity.createdAt != null) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  _formatRelativeTime(l10n, activity.createdAt!),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white38,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  static String _titleForActivity(AppLocalizations l10n, String type) {
-    switch (type) {
-      case 'PushEvent':
-        return l10n.activityTitlePush;
-      case 'PullRequestEvent':
-        return l10n.activityTitlePr;
-      case 'IssuesEvent':
-        return l10n.activityTitleIssue;
-      case 'IssueCommentEvent':
-        return l10n.activityTitleIssueComment;
-      case 'PullRequestReviewEvent':
-        return l10n.activityTitlePrReview;
-      case 'WatchEvent':
-        return l10n.activityTitleWatch;
-      case 'CreateEvent':
-        return l10n.activityTitleCreate;
-      case 'ForkEvent':
-        return l10n.activityTitleFork;
-      default:
-        return l10n.activityTitleDefault(type.replaceAll('Event', ''));
-    }
-  }
-
-  static String _descriptionForActivity(
-    AppLocalizations l10n,
-    GithubActivity activity,
-  ) {
-    final repo = activity.repoName.isEmpty
-        ? l10n.homeUnknownRepo
-        : activity.repoName;
-    final payload = activity.payload;
-    if (payload == null) {
-      return repo;
-    }
-
-    switch (activity.type) {
-      case 'PushEvent':
-        final commitCount = payload['size'];
-        final commits = payload['commits'];
-        if (commitCount is int && commitCount > 0) {
-          if (commits is List && commits.isNotEmpty) {
-            final firstCommit = commits.first;
-            if (firstCommit is Map<String, dynamic>) {
-              final message = firstCommit['message']?.toString().trim();
-              if (message != null && message.isNotEmpty) {
-                return l10n.activityDescPushWithMessage(repo, commitCount, message);
-              }
-            }
-          }
-          return l10n.activityDescPushCount(repo, commitCount);
-        }
-        return l10n.activityDescPushFallback(repo);
-      case 'PullRequestEvent':
-        final action = payload['action']?.toString() ?? 'updated';
-        final pullRequest = payload['pull_request'];
-        final title = pullRequest is Map<String, dynamic>
-            ? pullRequest['title']?.toString()
-            : null;
-        return (title == null || title.isEmpty)
-            ? l10n.activityDescPrNoTitle(repo, action)
-            : l10n.activityDescPrWithTitle(repo, action, title);
-      case 'IssuesEvent':
-        final action = payload['action']?.toString() ?? 'updated';
-        final issue = payload['issue'];
-        final title = issue is Map<String, dynamic>
-            ? issue['title']?.toString()
-            : null;
-        return (title == null || title.isEmpty)
-            ? l10n.activityDescIssueNoTitle(repo, action)
-            : l10n.activityDescIssueWithTitle(repo, action, title);
-      case 'IssueCommentEvent':
-        final issue = payload['issue'];
-        final title = issue is Map<String, dynamic>
-            ? issue['title']?.toString()
-            : null;
-        return (title == null || title.isEmpty)
-            ? l10n.activityDescIssueCommentNoTitle(repo)
-            : l10n.activityDescIssueCommentWithTitle(repo, title);
-      case 'PullRequestReviewEvent':
-        final review = payload['review'];
-        final state = review is Map<String, dynamic>
-            ? review['state']?.toString()
-            : null;
-        return l10n.activityDescPrReview(repo, state ?? 'submitted');
-      case 'WatchEvent':
-        return l10n.activityDescWatch(repo);
-      case 'CreateEvent':
-        final refType = payload['ref_type']?.toString() ?? 'resource';
-        final ref = payload['ref']?.toString();
-        return (ref == null || ref.isEmpty)
-            ? l10n.activityDescCreateNoRef(repo, refType)
-            : l10n.activityDescCreateWithRef(repo, refType, ref);
-      case 'ForkEvent':
-        return l10n.activityDescFork(repo);
-      default:
-        return repo;
-    }
-  }
-
-  static IconData _iconForActivity(String type) {
-    switch (type) {
-      case 'PushEvent':
-        return Icons.upload_rounded;
-      case 'PullRequestEvent':
-        return Icons.merge_type_rounded;
-      case 'IssuesEvent':
-        return Icons.error_outline_rounded;
-      case 'IssueCommentEvent':
-        return Icons.chat_bubble_outline_rounded;
-      case 'PullRequestReviewEvent':
-        return Icons.rate_review_outlined;
-      case 'WatchEvent':
-        return Icons.star_border_rounded;
-      case 'ForkEvent':
-        return Icons.call_split_rounded;
-      default:
-        return Icons.bolt_rounded;
-    }
-  }
-
-  static Color _colorForActivity(String type) {
-    switch (type) {
-      case 'PushEvent':
-        return const Color(0xFF4FC3F7);
-      case 'PullRequestEvent':
-        return const Color(0xFFB388FF);
-      case 'IssuesEvent':
-        return const Color(0xFFFF8A65);
-      case 'IssueCommentEvent':
-        return const Color(0xFF4DD0E1);
-      case 'PullRequestReviewEvent':
-        return const Color(0xFF81C784);
-      case 'WatchEvent':
-        return const Color(0xFFFFD54F);
-      case 'CreateEvent':
-        return const Color(0xFF00897B);
-      case 'ForkEvent':
-        return const Color(0xFFF06292);
-      default:
-        return const Color(0xFFB0BEC5);
-    }
-  }
-
-  static String _formatRelativeTime(
-    AppLocalizations l10n,
-    DateTime dateTime,
-  ) {
-    final difference = DateTime.now().difference(dateTime);
-    if (difference.inMinutes < 1) {
-      return l10n.relativeJustNow;
-    }
-    if (difference.inHours < 1) {
-      return l10n.relativeMinutes(difference.inMinutes);
-    }
-    if (difference.inDays < 1) {
-      return l10n.relativeHours(difference.inHours);
-    }
-    if (difference.inDays < 30) {
-      return l10n.relativeDays(difference.inDays);
-    }
-    final month = (difference.inDays / 30).floor();
-    if (month < 12) {
-      return l10n.relativeMonths(month);
-    }
-    final year = (difference.inDays / 365).floor();
-    return l10n.relativeYears(year);
-  }
-}
-
-class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.isLoggingOut, required this.onOpenSettings});
-
-  final bool isLoggingOut;
-  final Future<void> Function() onOpenSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.primary.withValues(alpha: 0.14),
-            ),
-            child: Icon(Icons.pets_rounded, color: colors.primary, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              l10n.homeAppTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: isLoggingOut ? null : onOpenSettings,
-            style: IconButton.styleFrom(
-              minimumSize: const Size(38, 38),
-              padding: EdgeInsets.zero,
-              backgroundColor: Colors.white.withValues(alpha: 0.04),
-              foregroundColor: Colors.white70,
-            ),
-            icon: isLoggingOut
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.menu_rounded),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DebugMoodSelector extends StatelessWidget {
-  const _DebugMoodSelector({
-    required this.current,
-    required this.onChanged,
-    required this.petType,
-  });
-
-  final PetMood current;
-  final ValueChanged<PetMood> onChanged;
-  final PetType petType;
-
-  @override
-  Widget build(BuildContext context) {
-    final available =
-        PetMood.values.where((m) => petSprites[petType]!.containsKey(m));
-
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 4,
-      runSpacing: 4,
-      children: available.map((mood) {
-        final selected = mood == current;
-        return Material(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.25)
-              : Colors.black.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () => onChanged(mood),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                mood.label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: selected ? Colors.white : Colors.white70,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 }
