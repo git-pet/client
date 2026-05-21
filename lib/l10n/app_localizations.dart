@@ -516,6 +516,150 @@ abstract class AppLocalizations {
   /// **'{repo} · release published'**
   String activityDescReleaseNoTag(String repo);
 
+  /// No description provided for @friendsCollapsedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand the tab to load your friends.'**
+  String get friendsCollapsedHint;
+
+  /// No description provided for @friendsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load friends.'**
+  String get friendsLoadError;
+
+  /// No description provided for @friendsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get friendsRetry;
+
+  /// No description provided for @friendsSectionIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming requests'**
+  String get friendsSectionIncoming;
+
+  /// No description provided for @friendsSectionFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friendsSectionFriends;
+
+  /// No description provided for @friendsSectionOutgoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent requests'**
+  String get friendsSectionOutgoing;
+
+  /// No description provided for @friendsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have any friends yet. Add some from search!'**
+  String get friendsEmpty;
+
+  /// No description provided for @friendsActionAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get friendsActionAccept;
+
+  /// No description provided for @friendsActionReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get friendsActionReject;
+
+  /// No description provided for @friendsActionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get friendsActionCancel;
+
+  /// No description provided for @friendsActionRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get friendsActionRemove;
+
+  /// No description provided for @friendsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a friend'**
+  String get friendsAddTitle;
+
+  /// No description provided for @friendsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by username'**
+  String get friendsSearchHint;
+
+  /// No description provided for @friendsSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching users found.'**
+  String get friendsSearchEmpty;
+
+  /// No description provided for @friendsSearchPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a username to search.'**
+  String get friendsSearchPrompt;
+
+  /// No description provided for @friendsRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request sent.'**
+  String get friendsRequestSent;
+
+  /// No description provided for @friendsAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Already friends or request pending.'**
+  String get friendsAlreadyExists;
+
+  /// No description provided for @friendsSelfBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t send a request to yourself.'**
+  String get friendsSelfBlocked;
+
+  /// No description provided for @friendsSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send request: {reason}'**
+  String friendsSendFailed(String reason);
+
+  /// No description provided for @friendsAcceptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not accept request.'**
+  String get friendsAcceptFailed;
+
+  /// No description provided for @friendsRemoveConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove friend?'**
+  String get friendsRemoveConfirmTitle;
+
+  /// No description provided for @friendsRemoveConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove {username}?'**
+  String friendsRemoveConfirmBody(String username);
+
+  /// No description provided for @friendsRemoveConfirmAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get friendsRemoveConfirmAccept;
+
+  /// No description provided for @friendsRemoveConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get friendsRemoveConfirmCancel;
+
   /// No description provided for @relativeJustNow.
   ///
   /// In en, this message translates to:

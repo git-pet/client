@@ -256,6 +256,82 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get friendsCollapsedHint => '탭을 확장하면 친구 목록을 불러옵니다.';
+
+  @override
+  String get friendsLoadError => '친구 목록을 불러오지 못했습니다.';
+
+  @override
+  String get friendsRetry => '다시 시도';
+
+  @override
+  String get friendsSectionIncoming => '받은 요청';
+
+  @override
+  String get friendsSectionFriends => '친구';
+
+  @override
+  String get friendsSectionOutgoing => '보낸 요청';
+
+  @override
+  String get friendsEmpty => '아직 친구가 없어요. 검색에서 친구를 추가해보세요!';
+
+  @override
+  String get friendsActionAccept => '수락';
+
+  @override
+  String get friendsActionReject => '거절';
+
+  @override
+  String get friendsActionCancel => '취소';
+
+  @override
+  String get friendsActionRemove => '삭제';
+
+  @override
+  String get friendsAddTitle => '친구 추가';
+
+  @override
+  String get friendsSearchHint => '사용자 이름으로 검색';
+
+  @override
+  String get friendsSearchEmpty => '일치하는 사용자가 없습니다.';
+
+  @override
+  String get friendsSearchPrompt => '사용자 이름을 입력하세요.';
+
+  @override
+  String get friendsRequestSent => '친구 요청을 보냈습니다.';
+
+  @override
+  String get friendsAlreadyExists => '이미 친구이거나 요청을 보낸 상태입니다.';
+
+  @override
+  String get friendsSelfBlocked => '자기 자신에게는 요청을 보낼 수 없어요.';
+
+  @override
+  String friendsSendFailed(String reason) {
+    return '요청을 보내지 못했습니다: $reason';
+  }
+
+  @override
+  String get friendsAcceptFailed => '요청을 수락하지 못했습니다.';
+
+  @override
+  String get friendsRemoveConfirmTitle => '친구를 삭제할까요?';
+
+  @override
+  String friendsRemoveConfirmBody(String username) {
+    return '정말 $username님을 친구에서 삭제하시겠어요?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAccept => '삭제';
+
+  @override
+  String get friendsRemoveConfirmCancel => '취소';
+
+  @override
   String get relativeJustNow => '방금 전';
 
   @override

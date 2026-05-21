@@ -158,6 +158,37 @@
     "placeholders": { "repo": { "type": "String" } }
   },
 
+  "friendsCollapsedHint": "Expand the tab to load your friends.",
+  "friendsLoadError": "Could not load friends.",
+  "friendsRetry": "Try again",
+  "friendsSectionIncoming": "Incoming requests",
+  "friendsSectionFriends": "Friends",
+  "friendsSectionOutgoing": "Sent requests",
+  "friendsEmpty": "You don't have any friends yet. Add some from search!",
+  "friendsActionAccept": "Accept",
+  "friendsActionReject": "Reject",
+  "friendsActionCancel": "Cancel",
+  "friendsActionRemove": "Remove",
+  "friendsAddTitle": "Add a friend",
+  "friendsSearchHint": "Search by username",
+  "friendsSearchEmpty": "No matching users found.",
+  "friendsSearchPrompt": "Type a username to search.",
+  "friendsRequestSent": "Friend request sent.",
+  "friendsAlreadyExists": "Already friends or request pending.",
+  "friendsSelfBlocked": "You can't send a request to yourself.",
+  "friendsSendFailed": "Could not send request: {reason}",
+  "@friendsSendFailed": {
+    "placeholders": { "reason": { "type": "String" } }
+  },
+  "friendsAcceptFailed": "Could not accept request.",
+  "friendsRemoveConfirmTitle": "Remove friend?",
+  "friendsRemoveConfirmBody": "Are you sure you want to remove {username}?",
+  "@friendsRemoveConfirmBody": {
+    "placeholders": { "username": { "type": "String" } }
+  },
+  "friendsRemoveConfirmAccept": "Remove",
+  "friendsRemoveConfirmCancel": "Cancel",
+
   "relativeJustNow": "Just now",
   "relativeMinutes": "{minutes, plural, =1{1 minute ago} other{{minutes} minutes ago}}",
   "@relativeMinutes": {

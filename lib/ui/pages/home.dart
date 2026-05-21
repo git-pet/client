@@ -3,6 +3,7 @@ import 'package:client/models/github_activity.dart';
 import 'package:client/models/pet.dart';
 import 'package:client/services/github_service.dart';
 import 'package:client/ui/widgets/activity_tab.dart';
+import 'package:client/ui/widgets/friends_tab.dart';
 import 'package:client/ui/widgets/home_header.dart';
 import 'package:client/ui/widgets/home_tab_section.dart';
 import 'package:client/ui/widgets/pet_room_card.dart';
@@ -175,22 +176,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTabContent(BoxConstraints contentConstraints, List<String> tabs) {
-    if (_selectedTabIndex == 0) {
-      return ActivityTab(
-        isExpanded: _isTabPanelExpanded,
-        isLoading: _isLoadingActivities,
-        githubName: _githubName,
-        githubLogin: _githubLogin,
-        error: _activityError,
-        activities: _activities,
-        onRetry: _loadGithubActivities,
-      );
+    switch (_selectedTabIndex) {
+      case 0:
+        return ActivityTab(
+          isExpanded: _isTabPanelExpanded,
+          isLoading: _isLoadingActivities,
+          githubName: _githubName,
+          githubLogin: _githubLogin,
+          error: _activityError,
+          activities: _activities,
+          onRetry: _loadGithubActivities,
+        );
+      case 1:
+        return FriendsTab(isExpanded: _isTabPanelExpanded);
+      default:
+        return PlaceholderTabContent(
+          label: tabs[_selectedTabIndex],
+          isExpanded: _isTabPanelExpanded,
+          contentConstraints: contentConstraints,
+        );
     }
-    return PlaceholderTabContent(
-      label: tabs[_selectedTabIndex],
-      isExpanded: _isTabPanelExpanded,
-      contentConstraints: contentConstraints,
-    );
   }
 
   @override

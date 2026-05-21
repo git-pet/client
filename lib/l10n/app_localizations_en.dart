@@ -264,6 +264,83 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get friendsCollapsedHint => 'Expand the tab to load your friends.';
+
+  @override
+  String get friendsLoadError => 'Could not load friends.';
+
+  @override
+  String get friendsRetry => 'Try again';
+
+  @override
+  String get friendsSectionIncoming => 'Incoming requests';
+
+  @override
+  String get friendsSectionFriends => 'Friends';
+
+  @override
+  String get friendsSectionOutgoing => 'Sent requests';
+
+  @override
+  String get friendsEmpty =>
+      'You don\'t have any friends yet. Add some from search!';
+
+  @override
+  String get friendsActionAccept => 'Accept';
+
+  @override
+  String get friendsActionReject => 'Reject';
+
+  @override
+  String get friendsActionCancel => 'Cancel';
+
+  @override
+  String get friendsActionRemove => 'Remove';
+
+  @override
+  String get friendsAddTitle => 'Add a friend';
+
+  @override
+  String get friendsSearchHint => 'Search by username';
+
+  @override
+  String get friendsSearchEmpty => 'No matching users found.';
+
+  @override
+  String get friendsSearchPrompt => 'Type a username to search.';
+
+  @override
+  String get friendsRequestSent => 'Friend request sent.';
+
+  @override
+  String get friendsAlreadyExists => 'Already friends or request pending.';
+
+  @override
+  String get friendsSelfBlocked => 'You can\'t send a request to yourself.';
+
+  @override
+  String friendsSendFailed(String reason) {
+    return 'Could not send request: $reason';
+  }
+
+  @override
+  String get friendsAcceptFailed => 'Could not accept request.';
+
+  @override
+  String get friendsRemoveConfirmTitle => 'Remove friend?';
+
+  @override
+  String friendsRemoveConfirmBody(String username) {
+    return 'Are you sure you want to remove $username?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAccept => 'Remove';
+
+  @override
+  String get friendsRemoveConfirmCancel => 'Cancel';
+
+  @override
   String get relativeJustNow => 'Just now';
 
   @override

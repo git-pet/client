@@ -33,9 +33,6 @@ class GithubActivityFeed {
 // TODO(realtime): 활동 피드는 실시간 반영이 자연스러운 영역.
 //   Supabase Realtime 구독(channel().onPostgresChanges)으로
 //   전환할지 검토 필요. 지금은 webhook 인입 빈도가 낮을 거라 보고 단발 조회로 유지.
-//
-// 스키마: public.activities (event_type text, metadata jsonb, user_id uuid → users.id).
-// 레포 이름 등 추가 정보는 metadata jsonb에서 꺼낸다 (GithubActivity._extractRepoName 참고).
 class GithubService {
   static const _activitiesTable = 'activities';
   static const _columnEventType = 'event_type';
