@@ -174,28 +174,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeUnknownRepo => 'Unknown repository';
 
   @override
-  String get activityTitlePush => 'Pushed commits';
+  String get activityTitleCommit => 'Pushed commits';
 
   @override
-  String get activityTitlePr => 'Pull request activity';
+  String get activityTitlePullRequest => 'Pull request activity';
 
   @override
   String get activityTitleIssue => 'Issue activity';
 
   @override
-  String get activityTitleIssueComment => 'Left an issue comment';
+  String get activityTitleCodeReview => 'Reviewed a pull request';
 
   @override
-  String get activityTitlePrReview => 'Reviewed a pull request';
-
-  @override
-  String get activityTitleWatch => 'Starred a repository';
-
-  @override
-  String get activityTitleCreate => 'Created a branch or tag';
+  String get activityTitleStar => 'Starred a repository';
 
   @override
   String get activityTitleFork => 'Forked a repository';
+
+  @override
+  String get activityTitleRelease => 'Published a release';
 
   @override
   String activityTitleDefault(String type) {
@@ -203,27 +200,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String activityDescPushWithMessage(String repo, int count, String message) {
+  String activityDescCommitWithMessage(String repo, int count, String message) {
     return '$repo · $count commits · $message';
   }
 
   @override
-  String activityDescPushCount(String repo, int count) {
+  String activityDescCommitCount(String repo, int count) {
     return '$repo · $count commits pushed';
   }
 
   @override
-  String activityDescPushFallback(String repo) {
+  String activityDescCommitFallback(String repo) {
     return 'Pushed commits to $repo.';
   }
 
   @override
-  String activityDescPrWithTitle(String repo, String action, String title) {
+  String activityDescPullRequestWithTitle(
+    String repo,
+    String action,
+    String title,
+  ) {
     return '$repo · PR $action · $title';
   }
 
   @override
-  String activityDescPrNoTitle(String repo, String action) {
+  String activityDescPullRequestNoTitle(String repo, String action) {
     return '$repo · PR $action';
   }
 
@@ -238,39 +239,106 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String activityDescIssueCommentWithTitle(String repo, String title) {
-    return '$repo · comment · $title';
-  }
-
-  @override
-  String activityDescIssueCommentNoTitle(String repo) {
-    return '$repo · comment';
-  }
-
-  @override
-  String activityDescPrReview(String repo, String state) {
+  String activityDescCodeReview(String repo, String state) {
     return '$repo · review $state';
   }
 
   @override
-  String activityDescWatch(String repo) {
+  String activityDescStar(String repo) {
     return '$repo · star';
-  }
-
-  @override
-  String activityDescCreateWithRef(String repo, String refType, String ref) {
-    return '$repo · $refType created · $ref';
-  }
-
-  @override
-  String activityDescCreateNoRef(String repo, String refType) {
-    return '$repo · $refType created';
   }
 
   @override
   String activityDescFork(String repo) {
     return '$repo · fork created';
   }
+
+  @override
+  String activityDescReleaseWithTag(String repo, String tag) {
+    return '$repo · release $tag';
+  }
+
+  @override
+  String activityDescReleaseNoTag(String repo) {
+    return '$repo · release published';
+  }
+
+  @override
+  String get friendsCollapsedHint => 'Expand the tab to load your friends.';
+
+  @override
+  String get friendsLoadError => 'Could not load friends.';
+
+  @override
+  String get friendsRetry => 'Try again';
+
+  @override
+  String get friendsSectionIncoming => 'Incoming requests';
+
+  @override
+  String get friendsSectionFriends => 'Friends';
+
+  @override
+  String get friendsSectionOutgoing => 'Sent requests';
+
+  @override
+  String get friendsEmpty =>
+      'You don\'t have any friends yet. Add some from search!';
+
+  @override
+  String get friendsActionAccept => 'Accept';
+
+  @override
+  String get friendsActionReject => 'Reject';
+
+  @override
+  String get friendsActionCancel => 'Cancel';
+
+  @override
+  String get friendsActionRemove => 'Remove';
+
+  @override
+  String get friendsAddTitle => 'Add a friend';
+
+  @override
+  String get friendsSearchHint => 'Search by username';
+
+  @override
+  String get friendsSearchEmpty => 'No matching users found.';
+
+  @override
+  String get friendsSearchPrompt => 'Type a username to search.';
+
+  @override
+  String get friendsRequestSent => 'Friend request sent.';
+
+  @override
+  String get friendsAlreadyExists => 'Already friends or request pending.';
+
+  @override
+  String get friendsSelfBlocked => 'You can\'t send a request to yourself.';
+
+  @override
+  String friendsSendFailed(String reason) {
+    return 'Could not send request: $reason';
+  }
+
+  @override
+  String get friendsAcceptFailed => 'Could not accept request.';
+
+  @override
+  String get friendsRemoveConfirmTitle => 'Remove friend?';
+
+  @override
+  String friendsRemoveConfirmBody(String username) {
+    return 'Are you sure you want to remove $username?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAccept => 'Remove';
+
+  @override
+  String get friendsRemoveConfirmCancel => 'Cancel';
 
   @override
   String get relativeJustNow => 'Just now';

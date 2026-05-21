@@ -166,28 +166,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeUnknownRepo => '알 수 없는 저장소';
 
   @override
-  String get activityTitlePush => '커밋을 푸시했어요';
+  String get activityTitleCommit => '커밋을 푸시했어요';
 
   @override
-  String get activityTitlePr => 'PR 활동이 있어요';
+  String get activityTitlePullRequest => 'PR 활동이 있어요';
 
   @override
   String get activityTitleIssue => '이슈 활동이 있어요';
 
   @override
-  String get activityTitleIssueComment => '이슈 댓글을 남겼어요';
+  String get activityTitleCodeReview => 'PR 리뷰를 남겼어요';
 
   @override
-  String get activityTitlePrReview => 'PR 리뷰를 남겼어요';
-
-  @override
-  String get activityTitleWatch => '저장소에 스타를 눌렀어요';
-
-  @override
-  String get activityTitleCreate => '브랜치 또는 태그를 생성했어요';
+  String get activityTitleStar => '저장소에 스타를 눌렀어요';
 
   @override
   String get activityTitleFork => '저장소를 포크했어요';
+
+  @override
+  String get activityTitleRelease => '릴리즈를 게시했어요';
 
   @override
   String activityTitleDefault(String type) {
@@ -195,27 +192,31 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String activityDescPushWithMessage(String repo, int count, String message) {
+  String activityDescCommitWithMessage(String repo, int count, String message) {
     return '$repo · $count개 커밋 · $message';
   }
 
   @override
-  String activityDescPushCount(String repo, int count) {
+  String activityDescCommitCount(String repo, int count) {
     return '$repo · $count개 커밋 푸시';
   }
 
   @override
-  String activityDescPushFallback(String repo) {
+  String activityDescCommitFallback(String repo) {
     return '$repo에 커밋을 푸시했습니다.';
   }
 
   @override
-  String activityDescPrWithTitle(String repo, String action, String title) {
+  String activityDescPullRequestWithTitle(
+    String repo,
+    String action,
+    String title,
+  ) {
     return '$repo · PR $action · $title';
   }
 
   @override
-  String activityDescPrNoTitle(String repo, String action) {
+  String activityDescPullRequestNoTitle(String repo, String action) {
     return '$repo · PR $action';
   }
 
@@ -230,39 +231,105 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String activityDescIssueCommentWithTitle(String repo, String title) {
-    return '$repo · 댓글 작성 · $title';
-  }
-
-  @override
-  String activityDescIssueCommentNoTitle(String repo) {
-    return '$repo · 댓글 작성';
-  }
-
-  @override
-  String activityDescPrReview(String repo, String state) {
+  String activityDescCodeReview(String repo, String state) {
     return '$repo · 리뷰 $state';
   }
 
   @override
-  String activityDescWatch(String repo) {
+  String activityDescStar(String repo) {
     return '$repo · star';
-  }
-
-  @override
-  String activityDescCreateWithRef(String repo, String refType, String ref) {
-    return '$repo · $refType 생성 · $ref';
-  }
-
-  @override
-  String activityDescCreateNoRef(String repo, String refType) {
-    return '$repo · $refType 생성';
   }
 
   @override
   String activityDescFork(String repo) {
     return '$repo · 포크 생성';
   }
+
+  @override
+  String activityDescReleaseWithTag(String repo, String tag) {
+    return '$repo · 릴리즈 $tag';
+  }
+
+  @override
+  String activityDescReleaseNoTag(String repo) {
+    return '$repo · 릴리즈 게시';
+  }
+
+  @override
+  String get friendsCollapsedHint => '탭을 확장하면 친구 목록을 불러옵니다.';
+
+  @override
+  String get friendsLoadError => '친구 목록을 불러오지 못했습니다.';
+
+  @override
+  String get friendsRetry => '다시 시도';
+
+  @override
+  String get friendsSectionIncoming => '받은 요청';
+
+  @override
+  String get friendsSectionFriends => '친구';
+
+  @override
+  String get friendsSectionOutgoing => '보낸 요청';
+
+  @override
+  String get friendsEmpty => '아직 친구가 없어요. 검색에서 친구를 추가해보세요!';
+
+  @override
+  String get friendsActionAccept => '수락';
+
+  @override
+  String get friendsActionReject => '거절';
+
+  @override
+  String get friendsActionCancel => '취소';
+
+  @override
+  String get friendsActionRemove => '삭제';
+
+  @override
+  String get friendsAddTitle => '친구 추가';
+
+  @override
+  String get friendsSearchHint => '사용자 이름으로 검색';
+
+  @override
+  String get friendsSearchEmpty => '일치하는 사용자가 없습니다.';
+
+  @override
+  String get friendsSearchPrompt => '사용자 이름을 입력하세요.';
+
+  @override
+  String get friendsRequestSent => '친구 요청을 보냈습니다.';
+
+  @override
+  String get friendsAlreadyExists => '이미 친구이거나 요청을 보낸 상태입니다.';
+
+  @override
+  String get friendsSelfBlocked => '자기 자신에게는 요청을 보낼 수 없어요.';
+
+  @override
+  String friendsSendFailed(String reason) {
+    return '요청을 보내지 못했습니다: $reason';
+  }
+
+  @override
+  String get friendsAcceptFailed => '요청을 수락하지 못했습니다.';
+
+  @override
+  String get friendsRemoveConfirmTitle => '친구를 삭제할까요?';
+
+  @override
+  String friendsRemoveConfirmBody(String username) {
+    return '정말 $username님을 친구에서 삭제하시겠어요?';
+  }
+
+  @override
+  String get friendsRemoveConfirmAccept => '삭제';
+
+  @override
+  String get friendsRemoveConfirmCancel => '취소';
 
   @override
   String get relativeJustNow => '방금 전';
