@@ -65,6 +65,17 @@ class _FriendsTabState extends State<FriendsTab> {
     }
   }
 
+  // 받은 요청 거절 — soft reject(status='rejected'). 이력 보존.
+  Future<void> _reject(Friendship f) async {
+    try {
+      await _service.rejectRequest(f.id);
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      _toast(error.toString());
+    }
+  }
+
   Future<void> _delete(Friendship f, {bool confirm = false}) async {
     if (confirm) {
       final l10n = AppLocalizations.of(context);
@@ -102,7 +113,9 @@ class _FriendsTabState extends State<FriendsTab> {
   }
 
   Future<void> _openAddFriend() async {
-    final added = await showModalBottomSheet<bool>(
+    final data = _data;
+    if (data == null) return;
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -114,13 +127,12 @@ class _FriendsTabState extends State<FriendsTab> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
-          child: _AddFriendSheet(service: _service),
+          child: _AddFriendSheet(service: _service, initialData: data),
         );
       },
     );
-    if (added == true) {
-      await _load();
-    }
+    // 시트 안에서 어떤 액션을 했든 닫히면 메인 목록을 새로고침.
+    if (mounted) await _load();
   }
 
   void _toast(String message) {
@@ -266,7 +278,7 @@ class _FriendsTabState extends State<FriendsTab> {
                           ),
                           _RowAction(
                             label: l10n.friendsActionReject,
-                            onTap: () => _delete(f),
+                            onTap: () => _reject(f),
                           ),
                         ],
                       ),
@@ -470,9 +482,10 @@ class _Avatar extends StatelessWidget {
 }
 
 class _AddFriendSheet extends StatefulWidget {
-  const _AddFriendSheet({required this.service});
+  const _AddFriendSheet({required this.service, required this.initialData});
 
   final FriendsService service;
+  final FriendsData initialData;
 
   @override
   State<_AddFriendSheet> createState() => _AddFriendSheetState();
@@ -486,12 +499,44 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
   String? _error;
   bool _hasSearched = false;
   String? _busyUserId;
+  late FriendsData _friendsData;
+
+  @override
+  void initState() {
+    super.initState();
+    _friendsData = widget.initialData;
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  // 검색 결과 유저와 현재 사용자 사이의 관계(있으면)를 찾는다.
+  // pending/accepted만 _friendsData에 담겨 있으므로 rejected는 null로 취급된다.
+  Friendship? _relationFor(String userId) {
+    for (final f in _friendsData.incoming) {
+      if (f.otherUser.id == userId) return f;
+    }
+    for (final f in _friendsData.outgoing) {
+      if (f.otherUser.id == userId) return f;
+    }
+    for (final f in _friendsData.friends) {
+      if (f.otherUser.id == userId) return f;
+    }
+    return null;
+  }
+
+  Future<void> _refreshRelations() async {
+    try {
+      final data = await widget.service.loadFriends();
+      if (!mounted) return;
+      setState(() => _friendsData = data);
+    } catch (_) {
+      // 관계 갱신 실패는 조용히 무시 — 시트가 닫힐 때 부모가 다시 로드한다.
+    }
   }
 
   void _onQueryChanged(String value) {
@@ -524,34 +569,41 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
     }
   }
 
-  Future<void> _sendRequest(UserSummary target) async {
-    final l10n = AppLocalizations.of(context);
+  // 액션 공통 래퍼: busy 표시 → 실행 → 관계 갱신 → 에러 토스트.
+  Future<void> _runAction(
+    String userId,
+    Future<void> Function() action, {
+    String? successMessage,
+  }) async {
     if (!mounted) return;
-    setState(() => _busyUserId = target.id);
+    final l10n = AppLocalizations.of(context);
+    setState(() => _busyUserId = userId);
     try {
-      await widget.service.sendRequest(target.id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.friendsRequestSent)),
-      );
-      Navigator.of(context).pop(true);
+      await action();
+      if (successMessage != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(successMessage)),
+        );
+      }
+      await _refreshRelations();
     } on FriendsAlreadyExistsException {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.friendsAlreadyExists)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.friendsAlreadyExists)),
+        );
+      }
     } on FriendsSelfRequestException {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.friendsSelfBlocked)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.friendsSelfBlocked)),
+        );
+      }
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.friendsSendFailed(error.toString())),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.friendsSendFailed(error.toString()))),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busyUserId = null);
     }
@@ -656,7 +708,6 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
       separatorBuilder: (_, _) => const SizedBox(height: 6),
       itemBuilder: (context, index) {
         final u = _results[index];
-        final isBusy = _busyUserId == u.id;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
@@ -677,29 +728,116 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              FilledButton(
-                onPressed: isBusy ? null : () => _sendRequest(u),
-                style: FilledButton.styleFrom(
-                  backgroundColor: colors.primary,
-                  foregroundColor: colors.onPrimary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  minimumSize: const Size(0, 32),
-                ),
-                child: isBusy
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.person_add_alt_1_rounded, size: 18),
-              ),
+              const SizedBox(width: 8),
+              _buildResultActions(u, colors, l10n),
             ],
           ),
         );
       },
+    );
+  }
+
+  // 검색 결과의 관계 상태에 따라 버튼을 다르게 그린다.
+  // 없음 → 추가 / 보낸요청 → 취소 / 받은요청 → 수락+거절 / 친구 → 삭제
+  Widget _buildResultActions(
+    UserSummary u,
+    ColorScheme colors,
+    AppLocalizations l10n,
+  ) {
+    if (_busyUserId == u.id) {
+      return const SizedBox(
+        width: 32,
+        height: 32,
+        child: Center(
+          child: SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    final relation = _relationFor(u.id);
+
+    if (relation == null) {
+      // 관계 없음 → 친구 추가
+      return FilledButton(
+        onPressed: () => _runAction(
+          u.id,
+          () => widget.service.sendRequest(u.id),
+          successMessage: l10n.friendsRequestSent,
+        ),
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.primary,
+          foregroundColor: colors.onPrimary,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          minimumSize: const Size(0, 32),
+        ),
+        child: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+      );
+    }
+
+    if (relation.status == FriendshipStatus.accepted) {
+      // 이미 친구 → 삭제
+      return TextButton(
+        onPressed: () => _runAction(
+          u.id,
+          () => widget.service.deleteFriendship(relation.id),
+        ),
+        style: TextButton.styleFrom(
+          foregroundColor: colors.tertiary,
+          minimumSize: const Size(0, 32),
+        ),
+        child: Text(l10n.friendsActionRemove),
+      );
+    }
+
+    if (relation.isOutgoing) {
+      // 내가 보낸 요청 → 취소
+      return TextButton(
+        onPressed: () => _runAction(
+          u.id,
+          () => widget.service.deleteFriendship(relation.id),
+        ),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white70,
+          minimumSize: const Size(0, 32),
+        ),
+        child: Text(l10n.friendsActionCancel),
+      );
+    }
+
+    // 상대가 보낸 요청 → 수락 + 거절
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FilledButton(
+          onPressed: () => _runAction(
+            u.id,
+            () => widget.service.acceptRequest(relation.id),
+          ),
+          style: FilledButton.styleFrom(
+            backgroundColor: colors.primary,
+            foregroundColor: colors.onPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            minimumSize: const Size(0, 32),
+          ),
+          child: Text(l10n.friendsActionAccept),
+        ),
+        TextButton(
+          onPressed: () => _runAction(
+            u.id,
+            () => widget.service.rejectRequest(relation.id),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white70,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            minimumSize: const Size(0, 32),
+          ),
+          child: Text(l10n.friendsActionReject),
+        ),
+      ],
     );
   }
 }
