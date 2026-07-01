@@ -35,15 +35,13 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _resolvePhase() async {
-    final introSeen = kDebugMode ? false : (
-        await SecureStorage().storage.read(
-          key: SecureStorageKey.introSeen.name,
-        ) ==
-        'true');
+    final storage = SecureStorage();
+    final introSeen = kDebugMode
+        ? false
+        : (await storage.read(SecureStorageKey.introSeen)) == 'true';
     final session = Supabase.instance.client.auth.currentSession;
-    final githubAccessToken = await SecureStorage().storage.read(
-      key: SecureStorageKey.githubAccessToken.name,
-    );
+    final githubAccessToken =
+        await storage.read(SecureStorageKey.githubAccessToken);
     if (!mounted) return;
     setState(() {
       if ((session?.accessToken.isNotEmpty ?? false) ||
@@ -56,10 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _handleIntroCompleted() async {
-    await SecureStorage().storage.write(
-      key: SecureStorageKey.introSeen.name,
-      value: 'true',
-    );
+    await SecureStorage().write(SecureStorageKey.introSeen, 'true');
     if (!mounted) return;
     setState(() {
       _phase = _Phase.login;

@@ -1,3 +1,4 @@
+import 'package:client/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -13,27 +14,27 @@ class IntroPage extends StatefulWidget {
 class _IntroPageState extends State<IntroPage> {
   final _pageController = PageController();
   int _currentPage = 0;
-  // TODO: i18n 적용
-  static const _pages = [
+
+  List<_IntroData> _buildPages(AppLocalizations l10n) => [
     _IntroData(
       icon: Icons.pets_rounded,
-      title: 'GitPet에 오신 걸 환영해요!',
-      description: '커밋할수록 성장하는 나만의 펫을\n키워보세요.',
+      title: l10n.introPage1Title,
+      description: l10n.introPage1Description,
     ),
     _IntroData(
       icon: Icons.code_rounded,
-      title: '커밋으로 성장',
-      description: 'Git 활동이 곧 펫의 경험치!\n꾸준한 개발이 펫을 더 강하게 만들어요.',
+      title: l10n.introPage2Title,
+      description: l10n.introPage2Description,
     ),
     _IntroData(
       icon: Icons.emoji_events_rounded,
-      title: '목표를 달성하세요',
-      description: '연속 커밋 기록을 세우고\n특별한 보상을 받아보세요.',
+      title: l10n.introPage3Title,
+      description: l10n.introPage3Description,
     ),
   ];
 
-  void _next() {
-    if (_currentPage < _pages.length - 1) {
+  void _next(int pageCount) {
+    if (_currentPage < pageCount - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -55,6 +56,8 @@ class _IntroPageState extends State<IntroPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final pages = _buildPages(l10n);
 
     return Scaffold(
       body: SafeArea(
@@ -65,7 +68,7 @@ class _IntroPageState extends State<IntroPage> {
               child: TextButton(
                 onPressed: _skip,
                 child: Text(
-                  '건너뛰기',
+                  l10n.introSkip,
                   style: TextStyle(color: colors.onSurface.withValues(alpha: 0.6)),
                 ),
               ),
@@ -74,10 +77,10 @@ class _IntroPageState extends State<IntroPage> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _pages.length,
+                itemCount: pages.length,
                 onPageChanged: (index) => setState(() => _currentPage = index),
                 itemBuilder: (context, index) {
-                  final page = _pages[index];
+                  final page = pages[index];
                   return Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8.w),
                     child: Column(
@@ -128,7 +131,7 @@ class _IntroPageState extends State<IntroPage> {
                 children: [
                   Row(
                     children: List.generate(
-                      _pages.length,
+                      pages.length,
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.only(right: 8),
@@ -144,7 +147,7 @@ class _IntroPageState extends State<IntroPage> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: _next,
+                    onPressed: () => _next(pages.length),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(
                         horizontal: 7.w,
@@ -152,7 +155,9 @@ class _IntroPageState extends State<IntroPage> {
                       ),
                     ),
                     child: Text(
-                      _currentPage == _pages.length - 1 ? '시작하기' : '다음',
+                      _currentPage == pages.length - 1
+                          ? l10n.introStart
+                          : l10n.introNext,
                     ),
                   ),
                 ],

@@ -1,4 +1,6 @@
 ﻿import 'package:client/config/app_env.dart';
+import 'package:client/config/app_locale.dart';
+import 'package:client/l10n/app_localizations.dart';
 import 'package:client/ui/pages/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -7,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppEnv.load();
+  await AppLocale.load();
 
   final hasSupabaseConfig =
       AppEnv.supabaseUrl.isNotEmpty && AppEnv.supabaseAnonKey.isNotEmpty;
@@ -29,11 +32,20 @@ class GitPetApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ResponsiveSizer(
       builder: (context, orientation, screenType) {
-        return MaterialApp(
-          title: 'GitPet',
-          theme: _buildAppTheme(),
-          debugShowCheckedModeBanner: false,
-          home: const SplashScreen(),
+        return ValueListenableBuilder<Locale?>(
+          valueListenable: AppLocale.notifier,
+          builder: (context, locale, _) {
+            return MaterialApp(
+              onGenerateTitle: (context) =>
+                  AppLocalizations.of(context).appTitle,
+              theme: _buildAppTheme(),
+              debugShowCheckedModeBanner: false,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: locale,
+              home: const SplashScreen(),
+            );
+          },
         );
       },
     );
