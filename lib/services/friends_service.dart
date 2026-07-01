@@ -146,7 +146,30 @@ class FriendsService {
     }
   }
 
-  // 들어온 요청 거절 또는 보낸 요청 취소 — 둘 다 row 자체를 삭제.
+  // 들어온 요청 거절 — row를 지우지 않고 status='rejected'로 보존.
+  // 이력이 남아 있어야 추후 친구 추천 제외 / 재요청 차단 등으로 확장 가능.
+  Future<void> rejectRequest(String friendshipId) async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      throw const FriendsAuthRequiredException();
+    }
+
+    try {
+      await supabase
+          .from(_friendshipsTable)
+          .update({
+            'status': 'rejected',
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', friendshipId)
+          .eq('receiver_id', user.id);
+    } on PostgrestException catch (error) {
+      throw FriendsServiceException(error.message);
+    }
+  }
+
+  // 보낸 요청 취소 / 친구 삭제 — row 자체를 삭제.
   Future<void> deleteFriendship(String friendshipId) async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
