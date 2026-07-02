@@ -100,11 +100,27 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // 갱신 재시도 사이클에서 두 번째 401이 다시 여기로 들어와 무한 루프가 되는 걸
+  // 막는 재진입 가드. 첫 401이면 refresh 시도, 재시도까지 실패하면 로그아웃.
+  bool _refreshInFlight = false;
+
   Future<void> _handleUnauthorized() async {
     if (!mounted) return;
-    // TODO: githubRefreshToken을 활용해 GitHub access token 재발급 로직 추가.
-    //  현재는 임시로 강제 로그아웃 후 재로그인 유도. 재발급 성공 시에는
-    //  새 토큰을 저장하고 _loadGithubActivities를 재시도하도록 변경할 것.
+
+    if (!_refreshInFlight) {
+      _refreshInFlight = true;
+      try {
+        await _githubService.refreshAccessToken();
+        await _loadGithubActivities();
+        return;
+      } catch (_) {
+        // fallthrough — refresh 실패 시 아래 로그아웃 흐름으로.
+      } finally {
+        _refreshInFlight = false;
+      }
+    }
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context).homeSessionExpired)),
     );
