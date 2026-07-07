@@ -105,6 +105,15 @@
   "friendsRemoveConfirmAccept": "삭제",
   "friendsRemoveConfirmCancel": "취소",
 
+  "friendDetailTitle": "{username}의 펫",
+  "friendDetailPetLoading": "펫 정보를 불러오는 중…",
+  "friendDetailPetError": "펫 정보를 불러오지 못했어요.",
+  "friendDetailPetUnavailable": "친구 펫 정보는 곧 지원됩니다.",
+  "friendDetailPetLevel": "Lv. {level}",
+  "friendDetailPetStage": "진화 {stage}단계",
+  "friendDetailPetExp": "{exp} / {nextExp} XP",
+  "friendDetailRetry": "다시 시도",
+
   "relativeJustNow": "방금 전",
   "relativeMinutes": "{minutes, plural, other{{minutes}분 전}}",
   "relativeHours": "{hours, plural, other{{hours}시간 전}}",

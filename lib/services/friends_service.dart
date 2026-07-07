@@ -1,4 +1,5 @@
 import 'package:client/models/friend.dart';
+import 'package:client/models/friend_pet_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FriendsAuthRequiredException implements Exception {
@@ -11,6 +12,13 @@ class FriendsAlreadyExistsException implements Exception {
 
 class FriendsSelfRequestException implements Exception {
   const FriendsSelfRequestException();
+}
+
+// 친구 펫 상태 Edge Function이 아직 배포되지 않은 동안 UI가 분기할 수 있도록
+// 별도 예외로 표시한다. 스키마 확정 후에는 이 예외를 제거하고 정상 응답
+// 경로만 남긴다.
+class FriendPetStateUnavailableException implements Exception {
+  const FriendPetStateUnavailableException();
 }
 
 class FriendsServiceException implements Exception {
@@ -167,6 +175,14 @@ class FriendsService {
     } on PostgrestException catch (error) {
       throw FriendsServiceException(error.message);
     }
+  }
+
+  // TODO(social): code kim이 배포할 친구 펫 상태 조회 Edge Function
+  //  이름/응답 스키마가 확정되면 supabase.functions.invoke(...)로 교체하고
+  //  FriendPetState.fromJson으로 파싱해 반환한다.
+  //  스키마 확정 전에는 이 예외를 던져 UI가 "곧 지원됩니다" 상태를 표시한다.
+  Future<FriendPetState> loadFriendPetState(String friendUserId) async {
+    throw const FriendPetStateUnavailableException();
   }
 
   // 보낸 요청 취소 / 친구 삭제 — row 자체를 삭제.

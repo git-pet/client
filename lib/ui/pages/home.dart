@@ -166,6 +166,7 @@ class _HomePageState extends State<HomePage> {
       case HomeSettingsAction.logout:
         await _logout();
         break;
+        
     }
   }
 

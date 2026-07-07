@@ -332,6 +332,38 @@ class AppLocalizationsKo extends AppLocalizations {
   String get friendsRemoveConfirmCancel => '취소';
 
   @override
+  String friendDetailTitle(String username) {
+    return '$username의 펫';
+  }
+
+  @override
+  String get friendDetailPetLoading => '펫 정보를 불러오는 중…';
+
+  @override
+  String get friendDetailPetError => '펫 정보를 불러오지 못했어요.';
+
+  @override
+  String get friendDetailPetUnavailable => '친구 펫 정보는 곧 지원됩니다.';
+
+  @override
+  String friendDetailPetLevel(int level) {
+    return 'Lv. $level';
+  }
+
+  @override
+  String friendDetailPetStage(int stage) {
+    return '진화 $stage단계';
+  }
+
+  @override
+  String friendDetailPetExp(int exp, int nextExp) {
+    return '$exp / $nextExp XP';
+  }
+
+  @override
+  String get friendDetailRetry => '다시 시도';
+
+  @override
   String get relativeJustNow => '방금 전';
 
   @override
