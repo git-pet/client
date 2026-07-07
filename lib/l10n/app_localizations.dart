@@ -660,6 +660,54 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get friendsRemoveConfirmCancel;
 
+  /// No description provided for @friendDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{username}\'s pet'**
+  String friendDetailTitle(String username);
+
+  /// No description provided for @friendDetailPetLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading pet info…'**
+  String get friendDetailPetLoading;
+
+  /// No description provided for @friendDetailPetError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load pet info.'**
+  String get friendDetailPetError;
+
+  /// No description provided for @friendDetailPetUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend pet info is coming soon.'**
+  String get friendDetailPetUnavailable;
+
+  /// No description provided for @friendDetailPetLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lv. {level}'**
+  String friendDetailPetLevel(int level);
+
+  /// No description provided for @friendDetailPetStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolution stage {stage}'**
+  String friendDetailPetStage(int stage);
+
+  /// No description provided for @friendDetailPetExp.
+  ///
+  /// In en, this message translates to:
+  /// **'{exp} / {nextExp} XP'**
+  String friendDetailPetExp(int exp, int nextExp);
+
+  /// No description provided for @friendDetailRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get friendDetailRetry;
+
   /// No description provided for @relativeJustNow.
   ///
   /// In en, this message translates to:

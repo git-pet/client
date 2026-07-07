@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/friend.dart';
 import 'package:client/services/friends_service.dart';
+import 'package:client/ui/pages/friend_detail.dart';
 import 'package:flutter/material.dart';
 
 class FriendsTab extends StatefulWidget {
@@ -110,6 +111,12 @@ class _FriendsTabState extends State<FriendsTab> {
       if (!mounted) return;
       _toast(error.toString());
     }
+  }
+
+  Future<void> _openFriendDetail(Friendship f) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => FriendDetailPage(friendship: f)),
+    );
   }
 
   Future<void> _openAddFriend() async {
@@ -290,6 +297,7 @@ class _FriendsTabState extends State<FriendsTab> {
                     ...data.friends.map(
                       (f) => _FriendRow(
                         friendship: f,
+                        onTap: () => _openFriendDetail(f),
                         actions: [
                           _RowAction(
                             label: l10n.friendsActionRemove,
@@ -361,10 +369,15 @@ class _RowAction {
 }
 
 class _FriendRow extends StatelessWidget {
-  const _FriendRow({required this.friendship, required this.actions});
+  const _FriendRow({
+    required this.friendship,
+    required this.actions,
+    this.onTap,
+  });
 
   final Friendship friendship;
   final List<_RowAction> actions;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -372,14 +385,8 @@ class _FriendRow extends StatelessWidget {
     final colors = theme.colorScheme;
     final user = friendship.otherUser;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+    final content = Padding(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.05),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
       child: Row(
         children: [
           _Avatar(url: user.avatarUrl, fallback: user.username),
@@ -443,6 +450,20 @@ class _FriendRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(onTap: onTap, child: content),
       ),
     );
   }
