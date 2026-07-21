@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:client/config/app_env.dart';
 import 'package:client/l10n/app_localizations.dart';
+import 'package:client/services/activity_service.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -23,6 +24,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       AppEnv.supabaseRedirectUrl.isNotEmpty;
 
   SupabaseClient? _supabase;
+  final ActivityService _activityService = ActivityService();
   StreamSubscription<AuthState>? _authSubscription;
   Timer? _oauthResumeTimer;
   Timer? _oauthFailureTimer;
@@ -64,6 +66,12 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 : l10n.loginStatusSignedIn(_displayLogin(_currentUser!));
           });
           _notifyLoginSuccessIfNeeded();
+          // tokenRefreshed / userUpdated 는 이미 진행 중인 세션의 부가 이벤트라
+          // 백필 트리거로 부적절. 매 로그인 성공(첫 로그인 or 세션 복구)마다만
+          // fire-and-forget 으로 호출한다. 서버가 backfilled_at 로 no-op 처리.
+          if (data.event == AuthChangeEvent.signedIn) {
+            unawaited(_backfillActivities());
+          }
           break;
         case AuthChangeEvent.signedOut:
           await _clearStoredUser();
@@ -240,6 +248,17 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   }
 
   Future<void> _clearStoredUser() => SecureStorage().clearGithubCredentials();
+
+  // 로그인 성공 직후 신규 유저 GitHub 활동 백필. 서비스가 지수 백오프로
+  // 재시도까지 처리하므로 여기선 최종 실패만 조용히 삼킨다. UI 흐름과
+  // 무관하게 fire-and-forget.
+  Future<void> _backfillActivities() async {
+    try {
+      await _activityService.backfillUserActivities();
+    } catch (_) {
+      // 다음 로그인 세션에서 재시도된다 (서버 idempotent).
+    }
+  }
 
   String _displayLogin(User user) {
     final metadata = user.userMetadata ?? <String, dynamic>{};

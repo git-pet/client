@@ -1,0 +1,66 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+// backfill-user-activities Edge Function 계약
+// (git-pet/server development 기준 README):
+//   POST /functions/v1/backfill-user-activities
+//   Body: { "days": 90, "limit": 300 }
+//   호출자: 로그인/가입 성공 직후 Flutter 클라이언트.
+//   멱등: users.backfilled_at + activities.github_event_id 로 서버가 보장하므로
+//   재시도해도 안전하며 두 번째 호출부터는 no-op.
+//
+// 호출부는 fire-and-forget 으로 사용한다 — UI 흐름을 막지 않는다.
+
+class ActivityAuthRequiredException implements Exception {
+  const ActivityAuthRequiredException();
+}
+
+class ActivityServiceException implements Exception {
+  const ActivityServiceException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+
+class ActivityService {
+  // 지수 백오프 대기 시간. 초기 시도 뒤 이 지연들만큼씩 대기 후 재시도한다.
+  //   1s → 3s → 10s. 총 최대 4회 시도(초회 + 3회 재시도).
+  static const _retryDelays = <Duration>[
+    Duration(seconds: 1),
+    Duration(seconds: 3),
+    Duration(seconds: 10),
+  ];
+
+  Future<void> backfillUserActivities({
+    int days = 90,
+    int limit = 300,
+  }) async {
+    Object? lastError;
+    for (var attempt = 0; attempt <= _retryDelays.length; attempt++) {
+      try {
+        await Supabase.instance.client.functions.invoke(
+          'backfill-user-activities',
+          body: {'days': days, 'limit': limit},
+        );
+        return;
+      } on AuthException {
+        // 401 계열은 재시도해도 무의미. 즉시 승격 후 종료.
+        throw const ActivityAuthRequiredException();
+      } on FunctionException catch (error) {
+        if (error.status == 401) {
+          throw const ActivityAuthRequiredException();
+        }
+        lastError = error;
+      } catch (error) {
+        lastError = error;
+      }
+
+      if (attempt < _retryDelays.length) {
+        await Future.delayed(_retryDelays[attempt]);
+      }
+    }
+
+    throw ActivityServiceException(
+      lastError?.toString() ?? 'backfill-user-activities 재시도 후에도 실패',
+    );
+  }
+}
