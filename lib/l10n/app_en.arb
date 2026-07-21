@@ -47,6 +47,8 @@
   "homeSettingsLanguageDescription": "Choose your app language.",
   "homeLanguageSelectorTitle": "Select language",
   "homeLanguageSystem": "System default",
+  "homeLanguageKorean": "Korean",
+  "homeLanguageEnglish": "English",
   "homeSettingsLogout": "Sign out",
   "homeSettingsLogoutDescription": "Disconnect the linked GitHub account.",
   "homePetSelectorTitle": "Choose a pet (Debug)",

@@ -1,21 +1,18 @@
 import 'package:client/config/app_locale.dart';
 import 'package:client/l10n/app_localizations.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:client/ui/widgets/sheets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
-const _supportedLanguageChoices = <Locale?>[
-  null,
-  Locale('ko'),
-  Locale('en'),
-];
+const _supportedLanguageChoices = <Locale?>[null, Locale('ko'), Locale('en')];
 
 String localeLabel(AppLocalizations l10n, Locale? locale) {
   if (locale == null) return l10n.homeLanguageSystem;
   switch (locale.languageCode) {
     case 'ko':
-      return '한국어';
+      return l10n.homeLanguageKorean;
     case 'en':
-      return 'English';
+      return l10n.homeLanguageEnglish;
     default:
       return locale.languageCode;
   }
@@ -44,7 +41,7 @@ Future<void> showLanguageSelectorSheet(BuildContext context) {
                   Text(
                     l10n.homeLanguageSelectorTitle,
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
+                      color: colors.onSurface,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -68,13 +65,15 @@ Future<void> showLanguageSelectorSheet(BuildContext context) {
                         ),
                         child: Icon(
                           Icons.language_rounded,
-                          color: selected ? colors.primary : Colors.white54,
+                          color: selected
+                              ? colors.primary
+                              : colors.appOnSurfaceSubtle,
                         ),
                       ),
                       title: Text(
                         localeLabel(l10n, locale),
                         style: TextStyle(
-                          color: selected ? colors.primary : Colors.white,
+                          color: selected ? colors.primary : colors.onSurface,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

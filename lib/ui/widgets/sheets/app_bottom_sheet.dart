@@ -1,3 +1,4 @@
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 const _sheetShape = RoundedRectangleBorder(
@@ -23,12 +24,14 @@ class SheetHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Center(
       child: Container(
         width: 44,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.white24,
+          color: colors.appOnSurfaceDisabled,
           borderRadius: BorderRadius.circular(999),
         ),
       ),

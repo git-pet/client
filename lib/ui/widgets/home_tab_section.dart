@@ -1,3 +1,4 @@
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class HomeTabSection extends StatelessWidget {
@@ -30,9 +31,9 @@ class HomeTabSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: colors.appPanelSurface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: colors.appPanelBorder),
       ),
       child: Column(
         children: [
@@ -61,7 +62,7 @@ class HomeTabSection extends StatelessWidget {
                         border: Border.all(
                           color: isSelected
                               ? colors.primary.withValues(alpha: 0.55)
-                              : Colors.white.withValues(alpha: 0.06),
+                              : colors.appPanelBorder,
                         ),
                       ),
                       child: Text(
@@ -70,7 +71,7 @@ class HomeTabSection extends StatelessWidget {
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: isSelected
                               ? colors.primary
-                              : Colors.white70,
+                              : colors.appOnSurfaceMuted,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -90,7 +91,7 @@ class HomeTabSection extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                color: Colors.black.withValues(alpha: 0.18),
+                color: colors.appContentSurface,
               ),
               child: LayoutBuilder(
                 builder: (context, contentConstraints) =>
