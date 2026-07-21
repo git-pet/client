@@ -349,7 +349,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get friendDetailPetError => '펫 정보를 불러오지 못했어요.';
 
   @override
-  String get friendDetailPetUnavailable => '친구 펫 정보는 곧 지원됩니다.';
+  String get friendDetailPetPrivate => '이 친구의 펫 룸은 비공개예요.';
 
   @override
   String friendDetailPetLevel(int level) {

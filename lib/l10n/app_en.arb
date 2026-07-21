@@ -197,7 +197,7 @@
   },
   "friendDetailPetLoading": "Loading pet info…",
   "friendDetailPetError": "Could not load pet info.",
-  "friendDetailPetUnavailable": "Friend pet info is coming soon.",
+  "friendDetailPetPrivate": "This friend's pet room is private.",
   "friendDetailPetLevel": "Lv. {level}",
   "@friendDetailPetLevel": {
     "placeholders": { "level": { "type": "int" } }

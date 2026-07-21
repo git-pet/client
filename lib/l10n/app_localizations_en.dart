@@ -358,7 +358,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendDetailPetError => 'Could not load pet info.';
 
   @override
-  String get friendDetailPetUnavailable => 'Friend pet info is coming soon.';
+  String get friendDetailPetPrivate => 'This friend\'s pet room is private.';
 
   @override
   String friendDetailPetLevel(int level) {
