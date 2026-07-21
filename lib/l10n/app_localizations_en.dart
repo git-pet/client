@@ -79,6 +79,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePetRoomTitle => 'My pet room';
 
   @override
+  String get homePetProgressLoading => 'Loading pet progress...';
+
+  @override
+  String get homePetProgressLoadError => 'Could not load pet progress.';
+
+  @override
+  String get homePetProgressEmpty => 'No pet progress yet.';
+
+  @override
+  String get homePetProgressRetry => 'Try again';
+
+  @override
   String get homeTabActivity => 'Activity';
 
   @override

@@ -224,6 +224,30 @@ abstract class AppLocalizations {
   /// **'My pet room'**
   String get homePetRoomTitle;
 
+  /// No description provided for @homePetProgressLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading pet progress...'**
+  String get homePetProgressLoading;
+
+  /// No description provided for @homePetProgressLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load pet progress.'**
+  String get homePetProgressLoadError;
+
+  /// No description provided for @homePetProgressEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pet progress yet.'**
+  String get homePetProgressEmpty;
+
+  /// No description provided for @homePetProgressRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get homePetProgressRetry;
+
   /// No description provided for @homeTabActivity.
   ///
   /// In en, this message translates to:

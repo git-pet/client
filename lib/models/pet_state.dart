@@ -1,5 +1,5 @@
 // 서버 소스: git-pet/server development 브랜치
-//   - GET /functions/v1/pet-progress → { level, exp, stage, mood }
+//   - GET /functions/v1/pet-progress → { level, exp, stage, mood, progress? }
 //   - GET /functions/v1/friends-pets → { friends: [{ user_id, nickname, avatar,
 //         level, exp, leveled_up, evolved, new_stage }] }
 //
@@ -9,7 +9,7 @@
 // PetState의 해당 필드는 기본값 false 로 채운다.
 //
 // XP 모델: 100 XP 당 1 레벨 (server 01_users_pets.sql 트리거 참조).
-// progress/nextLevelExp 는 파생값이므로 서버가 별도 필드로 주지 않는다.
+// progress 는 서버가 주면 우선 사용하고, 없으면 100 XP 기준으로 파생한다.
 
 enum PetStage {
   egg,
@@ -33,6 +33,7 @@ class PetState {
     required this.exp,
     required this.stage,
     this.mood,
+    this.progressOverride,
     this.leveledUp = false,
     this.evolved = false,
   });
@@ -43,6 +44,7 @@ class PetState {
   final PetStage stage;
   // pet-progress 응답에만 있고 friends-pets 응답에는 없다.
   final String? mood;
+  final double? progressOverride;
   final bool leveledUp;
   final bool evolved;
 
@@ -55,7 +57,8 @@ class PetState {
   int get nextLevelExp => expPerLevel;
 
   // 0.0 ~ 1.0 진행률.
-  double get progress => (expInLevel / expPerLevel).clamp(0.0, 1.0);
+  double get progress =>
+      progressOverride ?? (expInLevel / expPerLevel).clamp(0.0, 1.0).toDouble();
 
   factory PetState.fromPetProgressJson(Map<String, dynamic> json) {
     return PetState(
@@ -63,7 +66,13 @@ class PetState {
       exp: (json['exp'] as num?)?.toInt() ?? 0,
       stage: PetStage.fromApi(json['stage']?.toString()),
       mood: json['mood']?.toString(),
+      progressOverride: _progressFromApi(json['progress']),
     );
+  }
+
+  static double? _progressFromApi(Object? raw) {
+    if (raw is! num) return null;
+    return raw.toDouble().clamp(0.0, 1.0).toDouble();
   }
 
   factory PetState.fromFriendsPetsEntry(Map<String, dynamic> json) {

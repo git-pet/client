@@ -28,6 +28,10 @@
 
   "homeAppTitle": "GitPet Home",
   "homePetRoomTitle": "My pet room",
+  "homePetProgressLoading": "Loading pet progress...",
+  "homePetProgressLoadError": "Could not load pet progress.",
+  "homePetProgressEmpty": "No pet progress yet.",
+  "homePetProgressRetry": "Try again",
 
   "homeTabActivity": "Activity",
   "homeTabFriends": "Friends",

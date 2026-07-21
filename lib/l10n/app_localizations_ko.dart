@@ -76,6 +76,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homePetRoomTitle => '나의 펫 룸';
 
   @override
+  String get homePetProgressLoading => '펫 진행도를 불러오는 중입니다...';
+
+  @override
+  String get homePetProgressLoadError => '펫 진행도를 불러오지 못했습니다.';
+
+  @override
+  String get homePetProgressEmpty => '아직 펫 진행도가 없습니다.';
+
+  @override
+  String get homePetProgressRetry => '다시 시도';
+
+  @override
   String get homeTabActivity => '활동내역';
 
   @override
