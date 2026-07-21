@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/friend.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:client/services/friends_service.dart';
 import 'package:client/ui/pages/friend_detail.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,10 @@ class _FriendsTabState extends State<FriendsTab> {
   bool _isLoading = true;
   String? _error;
   FriendsData? _data;
+  // friends-pets 응답을 user_id -> entry 로 인덱싱.
+  // 서버는 room_visibility='private' 인 친구를 제외하므로,
+  // accepted 인 관계이지만 여기 없는 케이스가 존재할 수 있다 (= 비공개).
+  Map<String, FriendPetEntry> _petsByUserId = const {};
 
   @override
   void initState() {
@@ -35,10 +40,20 @@ class _FriendsTabState extends State<FriendsTab> {
       _error = null;
     });
     try {
-      final data = await _service.loadFriends();
+      // friendships 목록과 친구 펫 상태를 병렬 로드.
+      // friends-pets 실패는 치명적이지 않다 — 목록은 살리고 뱃지만 비운다.
+      final results = await Future.wait<Object>([
+        _service.loadFriends(),
+        _service.loadFriendsPets().catchError(
+          (Object _) => const FriendsPetsResponse(friends: []),
+        ),
+      ]);
       if (!mounted) return;
+      final data = results[0] as FriendsData;
+      final pets = results[1] as FriendsPetsResponse;
       setState(() {
         _data = data;
+        _petsByUserId = {for (final e in pets.friends) e.userId: e};
         _isLoading = false;
       });
     } on FriendsAuthRequiredException {
@@ -115,7 +130,12 @@ class _FriendsTabState extends State<FriendsTab> {
 
   Future<void> _openFriendDetail(Friendship f) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => FriendDetailPage(friendship: f)),
+      MaterialPageRoute(
+        builder: (_) => FriendDetailPage(
+          friendship: f,
+          pet: _petsByUserId[f.otherUser.id],
+        ),
+      ),
     );
   }
 
@@ -297,6 +317,7 @@ class _FriendsTabState extends State<FriendsTab> {
                     ...data.friends.map(
                       (f) => _FriendRow(
                         friendship: f,
+                        pet: _petsByUserId[f.otherUser.id],
                         onTap: () => _openFriendDetail(f),
                         actions: [
                           _RowAction(
@@ -373,11 +394,13 @@ class _FriendRow extends StatelessWidget {
     required this.friendship,
     required this.actions,
     this.onTap,
+    this.pet,
   });
 
   final Friendship friendship;
   final List<_RowAction> actions;
   final VoidCallback? onTap;
+  final FriendPetEntry? pet;
 
   @override
   Widget build(BuildContext context) {
@@ -412,6 +435,10 @@ class _FriendRow extends StatelessWidget {
                       color: Colors.white54,
                     ),
                   ),
+                if (pet != null) ...[
+                  const SizedBox(height: 6),
+                  _PetBadge(pet: pet!.pet),
+                ],
               ],
             ),
           ),
@@ -466,6 +493,48 @@ class _FriendRow extends StatelessWidget {
         child: InkWell(onTap: onTap, child: content),
       ),
     );
+  }
+}
+
+class _PetBadge extends StatelessWidget {
+  const _PetBadge({required this.pet});
+
+  final PetState pet;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(_stageIcon(pet.stage), size: 14, color: colors.primary),
+        const SizedBox(width: 4),
+        Text(
+          'Lv. ${pet.level}',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: colors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // TODO(l10n): stage 라벨은 friend_pet_card와 함께 arb로 통합.
+  static IconData _stageIcon(PetStage stage) {
+    switch (stage) {
+      case PetStage.egg:
+        return Icons.egg_alt_rounded;
+      case PetStage.baby:
+        return Icons.child_care_rounded;
+      case PetStage.adult:
+        return Icons.pets_rounded;
+      case PetStage.expert:
+        return Icons.star_rounded;
+      case PetStage.legend:
+        return Icons.workspace_premium_rounded;
+    }
   }
 }
 

@@ -678,11 +678,11 @@ abstract class AppLocalizations {
   /// **'Could not load pet info.'**
   String get friendDetailPetError;
 
-  /// No description provided for @friendDetailPetUnavailable.
+  /// No description provided for @friendDetailPetPrivate.
   ///
   /// In en, this message translates to:
-  /// **'Friend pet info is coming soon.'**
-  String get friendDetailPetUnavailable;
+  /// **'This friend\'s pet room is private.'**
+  String get friendDetailPetPrivate;
 
   /// No description provided for @friendDetailPetLevel.
   ///
