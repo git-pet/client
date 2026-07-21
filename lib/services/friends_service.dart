@@ -1,5 +1,5 @@
 import 'package:client/models/friend.dart';
-import 'package:client/models/friend_pet_state.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FriendsAuthRequiredException implements Exception {
@@ -177,11 +177,10 @@ class FriendsService {
     }
   }
 
-  // TODO(social): code kim이 배포할 친구 펫 상태 조회 Edge Function
-  //  이름/응답 스키마가 확정되면 supabase.functions.invoke(...)로 교체하고
-  //  FriendPetState.fromJson으로 파싱해 반환한다.
-  //  스키마 확정 전에는 이 예외를 던져 UI가 "곧 지원됩니다" 상태를 표시한다.
-  Future<FriendPetState> loadFriendPetState(String friendUserId) async {
+  // TODO(social): 다음 브랜치(features/friends-live-api)에서 friends-pets
+  //  Edge Function 응답으로부터 이 유저의 FriendPetEntry를 뽑아 반환한다.
+  //  지금은 UI 스켈레톤 유지용으로 예외만 던진다.
+  Future<PetState> loadFriendPetState(String friendUserId) async {
     throw const FriendPetStateUnavailableException();
   }
 
