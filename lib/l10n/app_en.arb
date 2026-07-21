@@ -160,6 +160,21 @@
     "placeholders": { "repo": { "type": "String" } }
   },
 
+  "friendFeedTitle": "Friend activity",
+  "friendFeedSegmentFeed": "Activity",
+  "friendFeedSegmentFriends": "Friends",
+  "friendFeedLoadError": "Could not load friend activity.",
+  "friendFeedInvalidResponse": "Friend activity response was invalid.",
+  "friendFeedRetry": "Try again",
+  "friendFeedEmpty": "No friend activity yet.",
+  "friendFeedLoadMoreError": "Try loading more again",
+  "friendFeedEnd": "You're all caught up.",
+  "friendFeedUnknownFriend": "Friend",
+  "friendFeedXp": "+{xp} XP",
+  "@friendFeedXp": {
+    "placeholders": { "xp": { "type": "int" } }
+  },
+
   "friendsCollapsedHint": "Expand the tab to load your friends.",
   "friendsLoadError": "Could not load friends.",
   "friendsRetry": "Try again",

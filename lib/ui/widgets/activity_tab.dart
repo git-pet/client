@@ -1,5 +1,6 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/github_activity.dart';
+import 'package:client/ui/widgets/activity_presentation.dart';
 import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -148,7 +149,7 @@ class ActivityTab extends StatelessWidget {
                 separatorBuilder: (_, index) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final activity = activities[index];
-                  final accent = _colorForActivity(activity.type);
+                  final accent = activityColorFor(activity.type);
                   return Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -167,7 +168,7 @@ class ActivityTab extends StatelessWidget {
                             color: accent.withValues(alpha: 0.18),
                           ),
                           child: Icon(
-                            _iconForActivity(activity.type),
+                            activityIconFor(activity.type),
                             color: accent,
                             size: 20,
                           ),
@@ -178,7 +179,7 @@ class ActivityTab extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _titleForActivity(l10n, activity.type),
+                                activityTitleFor(l10n, activity.type),
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   color: colors.onSurface,
                                   fontWeight: FontWeight.w700,
@@ -186,7 +187,7 @@ class ActivityTab extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _descriptionForActivity(l10n, activity),
+                                activityDescriptionFor(l10n, activity),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: colors.appOnSurfaceMuted,
                                   height: 1.4,
