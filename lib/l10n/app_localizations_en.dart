@@ -91,6 +91,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePetProgressRetry => 'Try again';
 
   @override
+  String get homeStatsOpen => 'Stats';
+
+  @override
   String get homeTabActivity => 'Activity';
 
   @override
@@ -117,6 +120,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendFeedRetry => 'Try again';
+
+  @override
+  String get statsTitle => 'Activity stats';
+
+  @override
+  String get statsDailyTab => 'Daily';
+
+  @override
+  String get statsWeeklyTab => 'Weekly';
+
+  @override
+  String get statsEventsTab => 'Events';
+
+  @override
+  String get statsDailyTitle => 'Last 30 days XP';
+
+  @override
+  String get statsWeeklyTitle => 'Last 12 weeks XP';
+
+  @override
+  String get statsEventsTitle => 'By event';
+
+  @override
+  String get statsEmpty => 'No activity stats to show yet.';
+
+  @override
+  String get statsLoadError => 'Could not load activity stats.';
+
+  @override
+  String get statsRetry => 'Try again';
+
+  @override
+  String get statsNoDaily => 'No daily stats for the last 30 days.';
+
+  @override
+  String get statsNoWeekly => 'No weekly stats for the last 12 weeks.';
+
+  @override
+  String get statsNoEvents => 'No event stats yet.';
+
+  @override
+  String get statsEventPush => 'Push';
+
+  @override
+  String get statsEventPullRequest => 'PR';
+
+  @override
+  String get statsEventIssue => 'Issue';
+
+  @override
+  String get statsEventStar => 'Star';
+
+  @override
+  String get statsEventOther => 'Other';
 
   @override
   String get homeTabCollapseHint => 'Tap this area to collapse the panel.';

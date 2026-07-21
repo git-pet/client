@@ -6,10 +6,12 @@ class HomeHeader extends StatelessWidget {
   const HomeHeader({
     super.key,
     required this.isLoggingOut,
+    required this.onOpenStats,
     required this.onOpenSettings,
   });
 
   final bool isLoggingOut;
+  final VoidCallback onOpenStats;
   final Future<void> Function() onOpenSettings;
 
   @override
@@ -46,6 +48,23 @@ class HomeHeader extends StatelessWidget {
               ),
             ),
           ),
+          TextButton.icon(
+            onPressed: isLoggingOut ? null : onOpenStats,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 38),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              backgroundColor: colors.primary.withValues(alpha: 0.12),
+              foregroundColor: colors.primary,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            icon: const Icon(Icons.bar_chart_rounded, size: 18),
+            label: Text(
+              l10n.homeStatsOpen,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
           IconButton(
             onPressed: isLoggingOut ? null : onOpenSettings,
             style: IconButton.styleFrom(

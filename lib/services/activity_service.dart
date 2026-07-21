@@ -1,3 +1,4 @@
+import 'package:client/models/activity_stats.dart';
 import 'package:client/models/friend_feed_item.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -92,6 +93,29 @@ class ActivityService {
       }
       throw ActivityServiceException(
         error.details?.toString() ?? 'friend-feed 호출 실패 (${error.status})',
+      );
+    }
+  }
+
+  Future<ActivityStats> loadActivityStats() async {
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'activity-stats',
+        method: HttpMethod.get,
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return ActivityStats.fromJson(data);
+      }
+      throw const ActivityServiceException('activity-stats 응답 형식 오류');
+    } on AuthException {
+      throw const ActivityAuthRequiredException();
+    } on FunctionException catch (error) {
+      if (error.status == 401) {
+        throw const ActivityAuthRequiredException();
+      }
+      throw ActivityServiceException(
+        error.details?.toString() ?? 'activity-stats 호출 실패 (${error.status})',
       );
     }
   }

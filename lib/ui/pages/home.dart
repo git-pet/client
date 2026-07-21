@@ -2,6 +2,7 @@ import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/github_activity.dart';
 import 'package:client/models/pet.dart';
 import 'package:client/models/pet_state.dart';
+import 'package:client/screens/stats/activity_stats_screen.dart';
 import 'package:client/services/github_service.dart';
 import 'package:client/services/pet_service.dart';
 import 'package:client/ui/widgets/activity_tab.dart';
@@ -252,6 +253,12 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _openStats() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ActivityStatsScreen()));
+  }
+
   void _selectTab(int index) {
     setState(() {
       _selectedTabIndex = index;
@@ -300,6 +307,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               HomeHeader(
                 isLoggingOut: _isLoggingOut,
+                onOpenStats: _openStats,
                 onOpenSettings: _openSettings,
               ),
               const SizedBox(height: 10),

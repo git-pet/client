@@ -88,6 +88,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homePetProgressRetry => '다시 시도';
 
   @override
+  String get homeStatsOpen => '통계 보기';
+
+  @override
   String get homeTabActivity => '활동내역';
 
   @override
@@ -113,6 +116,60 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get friendFeedRetry => '다시 시도';
+
+  @override
+  String get statsTitle => '활동 통계';
+
+  @override
+  String get statsDailyTab => '일별';
+
+  @override
+  String get statsWeeklyTab => '주별';
+
+  @override
+  String get statsEventsTab => '이벤트별';
+
+  @override
+  String get statsDailyTitle => '최근 30일 XP';
+
+  @override
+  String get statsWeeklyTitle => '최근 12주 XP';
+
+  @override
+  String get statsEventsTitle => '이벤트별 비율';
+
+  @override
+  String get statsEmpty => '표시할 활동 통계가 아직 없습니다.';
+
+  @override
+  String get statsLoadError => '활동 통계를 불러오지 못했습니다.';
+
+  @override
+  String get statsRetry => '다시 시도';
+
+  @override
+  String get statsNoDaily => '최근 30일 일별 통계가 없습니다.';
+
+  @override
+  String get statsNoWeekly => '최근 12주 주별 통계가 없습니다.';
+
+  @override
+  String get statsNoEvents => '이벤트별 통계가 없습니다.';
+
+  @override
+  String get statsEventPush => 'Push';
+
+  @override
+  String get statsEventPullRequest => 'PR';
+
+  @override
+  String get statsEventIssue => 'Issue';
+
+  @override
+  String get statsEventStar => 'Star';
+
+  @override
+  String get statsEventOther => '기타';
 
   @override
   String get homeTabCollapseHint => '탭을 접으려면 이 영역을 누르세요.';
