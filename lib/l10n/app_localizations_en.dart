@@ -98,7 +98,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Expand the tab to load your friends\' recent activity.';
 
   @override
-  String get friendFeedEmpty => 'No recent activity from your friends yet.';
+  String get friendFeedEmpty => 'No friend activity yet.';
 
   @override
   String get friendFeedLoadError => 'Could not load friend activity.';
@@ -295,17 +295,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendFeedSegmentFriends => 'Friends';
 
   @override
-  String get friendFeedLoadError => 'Could not load friend activity.';
-
-  @override
   String get friendFeedInvalidResponse =>
       'Friend activity response was invalid.';
-
-  @override
-  String get friendFeedRetry => 'Try again';
-
-  @override
-  String get friendFeedEmpty => 'No friend activity yet.';
 
   @override
   String get friendFeedLoadMoreError => 'Try loading more again';

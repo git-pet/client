@@ -1,6 +1,5 @@
 import 'package:client/models/friend.dart';
 import 'package:client/models/friend_activity.dart';
-import 'package:client/models/friend_pet_state.dart';
 import 'package:client/models/pet_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

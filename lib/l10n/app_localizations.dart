@@ -263,7 +263,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendFeedEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No recent activity from your friends yet.'**
+  /// **'No friend activity yet.'**
   String get friendFeedEmpty;
 
   /// No description provided for @friendFeedLoadError.
@@ -576,29 +576,11 @@ abstract class AppLocalizations {
   /// **'Friends'**
   String get friendFeedSegmentFriends;
 
-  /// No description provided for @friendFeedLoadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load friend activity.'**
-  String get friendFeedLoadError;
-
   /// No description provided for @friendFeedInvalidResponse.
   ///
   /// In en, this message translates to:
   /// **'Friend activity response was invalid.'**
   String get friendFeedInvalidResponse;
-
-  /// No description provided for @friendFeedRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get friendFeedRetry;
-
-  /// No description provided for @friendFeedEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No friend activity yet.'**
-  String get friendFeedEmpty;
 
   /// No description provided for @friendFeedLoadMoreError.
   ///

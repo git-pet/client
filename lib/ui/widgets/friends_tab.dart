@@ -258,7 +258,7 @@ class _FriendsTabState extends State<FriendsTab> {
           children: [
             Expanded(
               child: Text(
-                title,
+                l10n.homeTabFriends,
                 style: theme.textTheme.titleLarge?.copyWith(
                   color: colors.onSurface,
                   fontWeight: FontWeight.w800,
@@ -353,85 +353,8 @@ class _FriendsTabState extends State<FriendsTab> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: _load, child: Text(l10n.friendsRetry)),
-          ],
-        ),
-      );
-    }
-
-    if (isEmpty) {
-      return Center(
-        child: Text(
-          l10n.friendsEmpty,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: Colors.white60,
-            height: 1.5,
           ),
-        ),
-      );
-    }
-
-    final visibleData = data;
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          if (visibleData.incoming.isNotEmpty) ...[
-            _SectionHeader(label: l10n.friendsSectionIncoming),
-            ...visibleData.incoming.map(
-              (f) => _FriendRow(
-                friendship: f,
-                actions: [
-                  _RowAction(
-                    label: l10n.friendsActionAccept,
-                    primary: true,
-                    onTap: () => _accept(f),
-                  ),
-                  _RowAction(
-                    label: l10n.friendsActionReject,
-                    onTap: () => _reject(f),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          if (visibleData.friends.isNotEmpty) ...[
-            _SectionHeader(label: l10n.friendsSectionFriends),
-            ...visibleData.friends.map(
-              (f) => _FriendRow(
-                friendship: f,
-                onTap: () => _openFriendDetail(f),
-                actions: [
-                  _RowAction(
-                    label: l10n.friendsActionRemove,
-                    destructive: true,
-                    onTap: () => _delete(f, confirm: true),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          if (visibleData.outgoing.isNotEmpty) ...[
-            _SectionHeader(label: l10n.friendsSectionOutgoing),
-            ...visibleData.outgoing.map(
-              (f) => _FriendRow(
-                friendship: f,
-                actions: [
-                  _RowAction(
-                    label: l10n.friendsActionCancel,
-                    onTap: () => _delete(f),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+      ],
     );
   }
 }
