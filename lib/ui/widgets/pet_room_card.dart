@@ -1,5 +1,6 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/pet.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:client/ui/widgets/debug_mood_selector.dart';
 import 'package:client/ui/widgets/sprite_animator.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -15,6 +16,7 @@ class PetRoomCard extends StatelessWidget {
     required this.showCollapseHint,
     required this.onMoodChanged,
     required this.onTap,
+    this.progress,
   });
 
   final double height;
@@ -24,6 +26,8 @@ class PetRoomCard extends StatelessWidget {
   final bool showCollapseHint;
   final ValueChanged<PetMood> onMoodChanged;
   final VoidCallback onTap;
+  // 서버 pet-progress 응답. null 이면 로드 전/실패 — 뱃지·진행바를 숨긴다.
+  final PetState? progress;
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +64,25 @@ class PetRoomCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.homePetRoomTitle,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.homePetRoomTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (progress != null) _ProgressChip(state: progress!),
+            ],
           ),
+          if (progress != null) ...[
+            const SizedBox(height: 10),
+            _ExpBar(state: progress!),
+          ],
           const SizedBox(height: 20),
           Expanded(
             child: GestureDetector(
@@ -131,6 +147,93 @@ class PetRoomCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// stage 아이콘 + Lv.N 을 하나의 알약 형태로 표시한다.
+// friend_pet_card / friends_tab 의 stage 아이콘 매핑과 동일하다.
+// TODO(l10n): stage 라벨/아이콘 매핑은 여러 위젯에서 중복 중이라 통합 필요.
+class _ProgressChip extends StatelessWidget {
+  const _ProgressChip({required this.state});
+
+  final PetState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_stageIcon(state.stage), size: 14, color: colors.primary),
+          const SizedBox(width: 6),
+          Text(
+            'Lv. ${state.level}',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colors.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static IconData _stageIcon(PetStage stage) {
+    switch (stage) {
+      case PetStage.egg:
+        return Icons.egg_alt_rounded;
+      case PetStage.baby:
+        return Icons.child_care_rounded;
+      case PetStage.adult:
+        return Icons.pets_rounded;
+      case PetStage.expert:
+        return Icons.star_rounded;
+      case PetStage.legend:
+        return Icons.workspace_premium_rounded;
+    }
+  }
+}
+
+// 얇은 EXP 진행 바. 현재 레벨 내 진행률 + "{expInLevel}/{nextLevelExp}" 라벨.
+class _ExpBar extends StatelessWidget {
+  const _ExpBar({required this.state});
+
+  final PetState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: state.progress,
+            minHeight: 6,
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            valueColor: AlwaysStoppedAnimation(colors.primary),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${state.expInLevel} / ${state.nextLevelExp} XP',
+          textAlign: TextAlign.right,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.white54,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/github_activity.dart';
 import 'package:client/models/pet.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:client/services/github_service.dart';
+import 'package:client/services/pet_service.dart';
 import 'package:client/ui/widgets/activity_tab.dart';
 import 'package:client/ui/widgets/friends_tab.dart';
 import 'package:client/ui/widgets/home_header.dart';
@@ -30,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   static const _expandedTabPanelRatio = 0.6;
 
   final GithubService _githubService = GithubService();
+  final PetService _petService = PetService();
 
   List<String> _tabs(AppLocalizations l10n) => [
     l10n.homeTabActivity,
@@ -50,12 +53,33 @@ class _HomePageState extends State<HomePage> {
   PetType _petType = PetType.classicalCat;
   PetMood _mood = PetMood.idle;
 
+  // 서버가 관리하는 펫 상태 (level/exp/stage/mood).
+  // null 이면 로드 실패 or 로드 전 — 스프라이트는 로컬 값으로 계속 렌더한다.
+  PetState? _petProgress;
+
   SpriteInfo get _sprite => petSprites[_petType]![_mood]!;
 
   @override
   void initState() {
     super.initState();
     _loadGithubActivities();
+    _loadPetProgress();
+  }
+
+  // pet-progress GET 은 조회 전용. XP 적용은 서버 webhook 경로가 담당한다.
+  // 실패는 조용히 무시 — 다음 새로고침(pull-to-refresh 등)에서 재시도.
+  Future<void> _loadPetProgress() async {
+    try {
+      final progress = await _petService.loadPetProgress();
+      if (!mounted) return;
+      setState(() => _petProgress = progress);
+    } on PetAuthRequiredException {
+      await _handleUnauthorized();
+    } catch (_) {
+      // 홈 화면 자체는 정상 동작해야 하므로, 실패 시 배지만 비운다.
+      if (!mounted) return;
+      setState(() => _petProgress = null);
+    }
   }
 
   Future<void> _loadGithubActivities() async {
@@ -246,6 +270,7 @@ class _HomePageState extends State<HomePage> {
                           height: petRoomHeight,
                           petType: _petType,
                           sprite: _sprite,
+                          progress: _petProgress,
                           mood: _mood,
                           showCollapseHint: _isTabPanelExpanded,
                           onMoodChanged: (m) => setState(() => _mood = m),
