@@ -4,7 +4,10 @@ import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/friend.dart';
 import 'package:client/services/friends_service.dart';
 import 'package:client/ui/pages/friend_detail.dart';
+import 'package:client/ui/widgets/friend_activity_feed.dart';
 import 'package:flutter/material.dart';
+
+enum _FriendsTabView { feed, friends }
 
 class FriendsTab extends StatefulWidget {
   const FriendsTab({super.key, required this.isExpanded});
@@ -21,6 +24,7 @@ class _FriendsTabState extends State<FriendsTab> {
   bool _isLoading = true;
   String? _error;
   FriendsData? _data;
+  _FriendsTabView _selectedView = _FriendsTabView.feed;
 
   @override
   void initState() {
@@ -85,9 +89,7 @@ class _FriendsTabState extends State<FriendsTab> {
         builder: (dialogContext) {
           return AlertDialog(
             title: Text(l10n.friendsRemoveConfirmTitle),
-            content: Text(
-              l10n.friendsRemoveConfirmBody(f.otherUser.username),
-            ),
+            content: Text(l10n.friendsRemoveConfirmBody(f.otherUser.username)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -114,9 +116,9 @@ class _FriendsTabState extends State<FriendsTab> {
   }
 
   Future<void> _openFriendDetail(Friendship f) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => FriendDetailPage(friendship: f)),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => FriendDetailPage(friendship: f)));
   }
 
   Future<void> _openAddFriend() async {
@@ -143,7 +145,9 @@ class _FriendsTabState extends State<FriendsTab> {
   }
 
   void _toast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -174,6 +178,90 @@ class _FriendsTabState extends State<FriendsTab> {
         ),
       );
     }
+
+    // 동일하게 좁은 프레임 보호. ActivityTab과 같은 패턴.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxHeight < 80) {
+          return const SizedBox.shrink();
+        }
+        return _buildBody(theme, l10n);
+      },
+    );
+  }
+
+  Widget _buildBody(ThemeData theme, AppLocalizations l10n) {
+    final title = _selectedView == _FriendsTabView.feed
+        ? l10n.friendFeedTitle
+        : l10n.homeTabFriends;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: l10n.friendsAddTitle,
+              onPressed: _data == null ? null : _openAddFriend,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              color: Colors.white,
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<_FriendsTabView>(
+            showSelectedIcon: false,
+            segments: [
+              ButtonSegment(
+                value: _FriendsTabView.feed,
+                icon: const Icon(Icons.dynamic_feed_rounded, size: 18),
+                label: Text(l10n.friendFeedSegmentFeed),
+              ),
+              ButtonSegment(
+                value: _FriendsTabView.friends,
+                icon: const Icon(Icons.group_rounded, size: 18),
+                label: Text(l10n.friendFeedSegmentFriends),
+              ),
+            ],
+            selected: {_selectedView},
+            onSelectionChanged: (selection) {
+              setState(() => _selectedView = selection.first);
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: _selectedView == _FriendsTabView.feed
+              ? FriendActivityFeed(service: _service)
+              : _buildFriendsList(theme, l10n),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFriendsList(ThemeData theme, AppLocalizations l10n) {
+    final data = _data;
+    final isEmpty =
+        data == null ||
+        (data.friends.isEmpty &&
+            data.incoming.isEmpty &&
+            data.outgoing.isEmpty);
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -207,127 +295,78 @@ class _FriendsTabState extends State<FriendsTab> {
       );
     }
 
-    // 동일하게 좁은 프레임 보호. ActivityTab과 같은 패턴.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxHeight < 80) {
-          return const SizedBox.shrink();
-        }
-        return _buildBody(theme, l10n);
-      },
-    );
-  }
-
-  Widget _buildBody(ThemeData theme, AppLocalizations l10n) {
-    final data = _data;
-    final isEmpty = data == null ||
-        (data.friends.isEmpty &&
-            data.incoming.isEmpty &&
-            data.outgoing.isEmpty);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.homeTabFriends,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            IconButton(
-              tooltip: l10n.friendsAddTitle,
-              onPressed: _openAddFriend,
-              icon: const Icon(Icons.person_add_alt_1_rounded),
-              color: Colors.white,
-              style: IconButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary.withValues(
-                  alpha: 0.18,
-                ),
-              ),
-            ),
-          ],
+    if (isEmpty) {
+      return Center(
+        child: Text(
+          l10n.friendsEmpty,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: Colors.white60,
+            height: 1.5,
+          ),
         ),
-        const SizedBox(height: 12),
-        if (isEmpty)
-          Expanded(
-            child: Center(
-              child: Text(
-                l10n.friendsEmpty,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          )
-        else
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                children: [
-                  if (data.incoming.isNotEmpty) ...[
-                    _SectionHeader(label: l10n.friendsSectionIncoming),
-                    ...data.incoming.map(
-                      (f) => _FriendRow(
-                        friendship: f,
-                        actions: [
-                          _RowAction(
-                            label: l10n.friendsActionAccept,
-                            primary: true,
-                            onTap: () => _accept(f),
-                          ),
-                          _RowAction(
-                            label: l10n.friendsActionReject,
-                            onTap: () => _reject(f),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (data.friends.isNotEmpty) ...[
-                    _SectionHeader(label: l10n.friendsSectionFriends),
-                    ...data.friends.map(
-                      (f) => _FriendRow(
-                        friendship: f,
-                        onTap: () => _openFriendDetail(f),
-                        actions: [
-                          _RowAction(
-                            label: l10n.friendsActionRemove,
-                            destructive: true,
-                            onTap: () => _delete(f, confirm: true),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (data.outgoing.isNotEmpty) ...[
-                    _SectionHeader(label: l10n.friendsSectionOutgoing),
-                    ...data.outgoing.map(
-                      (f) => _FriendRow(
-                        friendship: f,
-                        actions: [
-                          _RowAction(
-                            label: l10n.friendsActionCancel,
-                            onTap: () => _delete(f),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+      );
+    }
+
+    final visibleData = data;
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          if (visibleData.incoming.isNotEmpty) ...[
+            _SectionHeader(label: l10n.friendsSectionIncoming),
+            ...visibleData.incoming.map(
+              (f) => _FriendRow(
+                friendship: f,
+                actions: [
+                  _RowAction(
+                    label: l10n.friendsActionAccept,
+                    primary: true,
+                    onTap: () => _accept(f),
+                  ),
+                  _RowAction(
+                    label: l10n.friendsActionReject,
+                    onTap: () => _reject(f),
+                  ),
                 ],
               ),
             ),
-          ),
-      ],
+            const SizedBox(height: 16),
+          ],
+          if (visibleData.friends.isNotEmpty) ...[
+            _SectionHeader(label: l10n.friendsSectionFriends),
+            ...visibleData.friends.map(
+              (f) => _FriendRow(
+                friendship: f,
+                onTap: () => _openFriendDetail(f),
+                actions: [
+                  _RowAction(
+                    label: l10n.friendsActionRemove,
+                    destructive: true,
+                    onTap: () => _delete(f, confirm: true),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (visibleData.outgoing.isNotEmpty) ...[
+            _SectionHeader(label: l10n.friendsSectionOutgoing),
+            ...visibleData.outgoing.map(
+              (f) => _FriendRow(
+                friendship: f,
+                actions: [
+                  _RowAction(
+                    label: l10n.friendsActionCancel,
+                    onTap: () => _delete(f),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -493,10 +532,7 @@ class _Avatar extends StatelessWidget {
       backgroundColor: colors.primary.withValues(alpha: 0.18),
       child: Text(
         letter,
-        style: TextStyle(
-          color: colors.primary,
-          fontWeight: FontWeight.w800,
-        ),
+        style: TextStyle(color: colors.primary, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -602,22 +638,22 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
     try {
       await action();
       if (successMessage != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(successMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(successMessage)));
       }
       await _refreshRelations();
     } on FriendsAlreadyExistsException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.friendsAlreadyExists)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsAlreadyExists)));
       }
     } on FriendsSelfRequestException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.friendsSelfBlocked)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsSelfBlocked)));
       }
     } catch (error) {
       if (mounted) {
@@ -670,7 +706,10 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
               decoration: InputDecoration(
                 hintText: l10n.friendsSearchHint,
                 hintStyle: const TextStyle(color: Colors.white38),
-                prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: Colors.white54,
+                ),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.06),
                 border: OutlineInputBorder(
@@ -834,10 +873,8 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         FilledButton(
-          onPressed: () => _runAction(
-            u.id,
-            () => widget.service.acceptRequest(relation.id),
-          ),
+          onPressed: () =>
+              _runAction(u.id, () => widget.service.acceptRequest(relation.id)),
           style: FilledButton.styleFrom(
             backgroundColor: colors.primary,
             foregroundColor: colors.onPrimary,
@@ -847,10 +884,8 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
           child: Text(l10n.friendsActionAccept),
         ),
         TextButton(
-          onPressed: () => _runAction(
-            u.id,
-            () => widget.service.rejectRequest(relation.id),
-          ),
+          onPressed: () =>
+              _runAction(u.id, () => widget.service.rejectRequest(relation.id)),
           style: TextButton.styleFrom(
             foregroundColor: Colors.white70,
             padding: const EdgeInsets.symmetric(horizontal: 8),
