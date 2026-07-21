@@ -28,8 +28,14 @@
 
   "homeTabActivity": "활동내역",
   "homeTabFriends": "친구",
+  "homeTabFriendFeed": "피드",
   "homeTabExplore": "탐색",
   "homeTabShop": "상점",
+
+  "friendFeedCollapsedHint": "탭을 확장하면 친구들의 최근 활동을 불러옵니다.",
+  "friendFeedEmpty": "친구들의 최근 활동이 아직 없어요.",
+  "friendFeedLoadError": "친구 활동을 불러오지 못했습니다.",
+  "friendFeedRetry": "다시 시도",
 
   "homeTabCollapseHint": "탭을 접으려면 이 영역을 누르세요.",
   "homeTabPlaceholder": "{tab} 정보가 이 영역에 표시될 예정입니다.",
