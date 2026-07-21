@@ -1,6 +1,6 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/friend.dart';
-import 'package:client/models/friend_pet_state.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:client/services/friends_service.dart';
 import 'package:client/ui/widgets/friend_pet_card.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +16,7 @@ class FriendDetailPage extends StatefulWidget {
 
 // 상세 화면의 펫 카드 영역 상태.
 // - loading: 초기 진입 / 재시도 중.
-// - unavailable: FriendPetStateUnavailableException — Edge Function 미배포 상태.
+// - unavailable: PetStateUnavailableException — Edge Function 미배포 상태.
 // - error: 그 외 예외. errorMessage로 표시.
 // - ready: state != null 일 때만 카드 렌더.
 enum _PetLoadStatus { loading, unavailable, error, ready }
@@ -25,7 +25,7 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
   final FriendsService _service = FriendsService();
 
   _PetLoadStatus _status = _PetLoadStatus.loading;
-  FriendPetState? _petState;
+  PetState? _petState;
   String? _errorMessage;
 
   @override
