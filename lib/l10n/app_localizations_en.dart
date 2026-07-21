@@ -121,6 +121,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLanguageSystem => 'System default';
 
   @override
+  String get homeLanguageKorean => 'Korean';
+
+  @override
+  String get homeLanguageEnglish => 'English';
+
+  @override
   String get homeSettingsLogout => 'Sign out';
 
   @override

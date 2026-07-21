@@ -302,6 +302,18 @@ abstract class AppLocalizations {
   /// **'System default'**
   String get homeLanguageSystem;
 
+  /// No description provided for @homeLanguageKorean.
+  ///
+  /// In en, this message translates to:
+  /// **'Korean'**
+  String get homeLanguageKorean;
+
+  /// No description provided for @homeLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get homeLanguageEnglish;
+
   /// No description provided for @homeSettingsLogout.
   ///
   /// In en, this message translates to:

@@ -117,6 +117,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeLanguageSystem => '시스템 기본값';
 
   @override
+  String get homeLanguageKorean => '한국어';
+
+  @override
+  String get homeLanguageEnglish => '영어';
+
+  @override
   String get homeSettingsLogout => '로그아웃';
 
   @override

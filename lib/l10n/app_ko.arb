@@ -41,6 +41,8 @@
   "homeSettingsLanguageDescription": "앱에서 사용할 언어를 선택합니다.",
   "homeLanguageSelectorTitle": "언어 선택",
   "homeLanguageSystem": "시스템 기본값",
+  "homeLanguageKorean": "한국어",
+  "homeLanguageEnglish": "영어",
   "homeSettingsLogout": "로그아웃",
   "homeSettingsLogoutDescription": "현재 연결된 GitHub 계정을 해제합니다.",
   "homePetSelectorTitle": "펫 선택 (Debug)",
