@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/friend.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:client/services/friends_service.dart';
 import 'package:client/ui/pages/friend_detail.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class FriendsTab extends StatefulWidget {
@@ -21,6 +23,10 @@ class _FriendsTabState extends State<FriendsTab> {
   bool _isLoading = true;
   String? _error;
   FriendsData? _data;
+  // friends-pets 응답을 user_id -> entry 로 인덱싱.
+  // 서버는 room_visibility='private' 인 친구를 제외하므로,
+  // accepted 인 관계이지만 여기 없는 케이스가 존재할 수 있다 (= 비공개).
+  Map<String, FriendPetEntry> _petsByUserId = const {};
 
   @override
   void initState() {
@@ -35,10 +41,20 @@ class _FriendsTabState extends State<FriendsTab> {
       _error = null;
     });
     try {
-      final data = await _service.loadFriends();
+      // friendships 목록과 친구 펫 상태를 병렬 로드.
+      // friends-pets 실패는 치명적이지 않다 — 목록은 살리고 뱃지만 비운다.
+      final results = await Future.wait<Object>([
+        _service.loadFriends(),
+        _service.loadFriendsPets().catchError(
+          (Object _) => const FriendsPetsResponse(friends: []),
+        ),
+      ]);
       if (!mounted) return;
+      final data = results[0] as FriendsData;
+      final pets = results[1] as FriendsPetsResponse;
       setState(() {
         _data = data;
+        _petsByUserId = {for (final e in pets.friends) e.userId: e};
         _isLoading = false;
       });
     } on FriendsAuthRequiredException {
@@ -85,9 +101,7 @@ class _FriendsTabState extends State<FriendsTab> {
         builder: (dialogContext) {
           return AlertDialog(
             title: Text(l10n.friendsRemoveConfirmTitle),
-            content: Text(
-              l10n.friendsRemoveConfirmBody(f.otherUser.username),
-            ),
+            content: Text(l10n.friendsRemoveConfirmBody(f.otherUser.username)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -115,7 +129,12 @@ class _FriendsTabState extends State<FriendsTab> {
 
   Future<void> _openFriendDetail(Friendship f) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => FriendDetailPage(friendship: f)),
+      MaterialPageRoute(
+        builder: (_) => FriendDetailPage(
+          friendship: f,
+          pet: _petsByUserId[f.otherUser.id],
+        ),
+      ),
     );
   }
 
@@ -143,7 +162,9 @@ class _FriendsTabState extends State<FriendsTab> {
   }
 
   void _toast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -166,7 +187,7 @@ class _FriendsTabState extends State<FriendsTab> {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
+                  color: colors.appOnSurfaceSubtle,
                 ),
               ),
             ),
@@ -187,7 +208,7 @@ class _FriendsTabState extends State<FriendsTab> {
             Text(
               l10n.friendsLoadError,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -196,7 +217,7 @@ class _FriendsTabState extends State<FriendsTab> {
               _error!,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.white60,
+                color: colors.appOnSurfaceSubtle,
                 height: 1.5,
               ),
             ),
@@ -219,8 +240,10 @@ class _FriendsTabState extends State<FriendsTab> {
   }
 
   Widget _buildBody(ThemeData theme, AppLocalizations l10n) {
+    final colors = theme.colorScheme;
     final data = _data;
-    final isEmpty = data == null ||
+    final isEmpty =
+        data == null ||
         (data.friends.isEmpty &&
             data.incoming.isEmpty &&
             data.outgoing.isEmpty);
@@ -234,7 +257,7 @@ class _FriendsTabState extends State<FriendsTab> {
               child: Text(
                 l10n.homeTabFriends,
                 style: theme.textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
+                  color: colors.onSurface,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -243,7 +266,7 @@ class _FriendsTabState extends State<FriendsTab> {
               tooltip: l10n.friendsAddTitle,
               onPressed: _openAddFriend,
               icon: const Icon(Icons.person_add_alt_1_rounded),
-              color: Colors.white,
+              color: colors.onSurface,
               style: IconButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary.withValues(
                   alpha: 0.18,
@@ -260,7 +283,7 @@ class _FriendsTabState extends State<FriendsTab> {
                 l10n.friendsEmpty,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
+                  color: colors.appOnSurfaceSubtle,
                   height: 1.5,
                 ),
               ),
@@ -297,6 +320,7 @@ class _FriendsTabState extends State<FriendsTab> {
                     ...data.friends.map(
                       (f) => _FriendRow(
                         friendship: f,
+                        pet: _petsByUserId[f.otherUser.id],
                         onTap: () => _openFriendDetail(f),
                         actions: [
                           _RowAction(
@@ -340,12 +364,13 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, top: 4),
       child: Text(
         label,
         style: theme.textTheme.labelLarge?.copyWith(
-          color: Colors.white70,
+          color: colors.appOnSurfaceMuted,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.4,
         ),
@@ -373,11 +398,13 @@ class _FriendRow extends StatelessWidget {
     required this.friendship,
     required this.actions,
     this.onTap,
+    this.pet,
   });
 
   final Friendship friendship;
   final List<_RowAction> actions;
   final VoidCallback? onTap;
+  final FriendPetEntry? pet;
 
   @override
   Widget build(BuildContext context) {
@@ -398,7 +425,7 @@ class _FriendRow extends StatelessWidget {
                 Text(
                   user.username,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
+                    color: colors.onSurface,
                     fontWeight: FontWeight.w700,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -409,9 +436,13 @@ class _FriendRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white54,
+                      color: colors.appOnSurfaceSubtle,
                     ),
                   ),
+                if (pet != null) ...[
+                  const SizedBox(height: 6),
+                  _PetBadge(pet: pet!.pet),
+                ],
               ],
             ),
           ),
@@ -438,7 +469,7 @@ class _FriendRow extends StatelessWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: a.destructive
                             ? colors.tertiary
-                            : Colors.white70,
+                            : colors.appOnSurfaceMuted,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 6,
@@ -457,8 +488,8 @@ class _FriendRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.05),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        color: colors.appSoftSurface,
+        border: Border.all(color: colors.appPanelBorder),
       ),
       clipBehavior: Clip.antiAlias,
       child: Material(
@@ -466,6 +497,48 @@ class _FriendRow extends StatelessWidget {
         child: InkWell(onTap: onTap, child: content),
       ),
     );
+  }
+}
+
+class _PetBadge extends StatelessWidget {
+  const _PetBadge({required this.pet});
+
+  final PetState pet;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(_stageIcon(pet.stage), size: 14, color: colors.primary),
+        const SizedBox(width: 4),
+        Text(
+          'Lv. ${pet.level}',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: colors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // TODO(l10n): stage 라벨은 friend_pet_card와 함께 arb로 통합.
+  static IconData _stageIcon(PetStage stage) {
+    switch (stage) {
+      case PetStage.egg:
+        return Icons.egg_alt_rounded;
+      case PetStage.baby:
+        return Icons.child_care_rounded;
+      case PetStage.adult:
+        return Icons.pets_rounded;
+      case PetStage.expert:
+        return Icons.star_rounded;
+      case PetStage.legend:
+        return Icons.workspace_premium_rounded;
+    }
   }
 }
 
@@ -493,10 +566,7 @@ class _Avatar extends StatelessWidget {
       backgroundColor: colors.primary.withValues(alpha: 0.18),
       child: Text(
         letter,
-        style: TextStyle(
-          color: colors.primary,
-          fontWeight: FontWeight.w800,
-        ),
+        style: TextStyle(color: colors.primary, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -602,22 +672,22 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
     try {
       await action();
       if (successMessage != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(successMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(successMessage)));
       }
       await _refreshRelations();
     } on FriendsAlreadyExistsException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.friendsAlreadyExists)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsAlreadyExists)));
       }
     } on FriendsSelfRequestException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.friendsSelfBlocked)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsSelfBlocked)));
       }
     } catch (error) {
       if (mounted) {
@@ -648,7 +718,7 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: colors.appOnSurfaceDisabled,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -657,7 +727,7 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
             Text(
               l10n.friendsAddTitle,
               style: theme.textTheme.titleLarge?.copyWith(
-                color: Colors.white,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -666,16 +736,12 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
               controller: _controller,
               autofocus: true,
               onChanged: _onQueryChanged,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: colors.onSurface),
               decoration: InputDecoration(
                 hintText: l10n.friendsSearchHint,
-                hintStyle: const TextStyle(color: Colors.white38),
-                prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.06),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: colors.appOnSurfaceSubtle,
                 ),
               ),
             ),
@@ -703,7 +769,9 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
         child: Text(
           _error!,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white60),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colors.appOnSurfaceSubtle,
+          ),
         ),
       );
     }
@@ -711,7 +779,9 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
       return Center(
         child: Text(
           l10n.friendsSearchPrompt,
-          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white54),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colors.appOnSurfaceSubtle,
+          ),
         ),
       );
     }
@@ -719,7 +789,9 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
       return Center(
         child: Text(
           l10n.friendsSearchEmpty,
-          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white60),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colors.appOnSurfaceSubtle,
+          ),
         ),
       );
     }
@@ -733,7 +805,7 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: Colors.white.withValues(alpha: 0.05),
+            color: colors.appSoftSurface,
           ),
           child: Row(
             children: [
@@ -743,7 +815,7 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
                 child: Text(
                   u.username,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
+                    color: colors.onSurface,
                     fontWeight: FontWeight.w700,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -822,7 +894,7 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
           () => widget.service.deleteFriendship(relation.id),
         ),
         style: TextButton.styleFrom(
-          foregroundColor: Colors.white70,
+          foregroundColor: colors.appOnSurfaceMuted,
           minimumSize: const Size(0, 32),
         ),
         child: Text(l10n.friendsActionCancel),
@@ -834,10 +906,8 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         FilledButton(
-          onPressed: () => _runAction(
-            u.id,
-            () => widget.service.acceptRequest(relation.id),
-          ),
+          onPressed: () =>
+              _runAction(u.id, () => widget.service.acceptRequest(relation.id)),
           style: FilledButton.styleFrom(
             backgroundColor: colors.primary,
             foregroundColor: colors.onPrimary,
@@ -847,12 +917,10 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
           child: Text(l10n.friendsActionAccept),
         ),
         TextButton(
-          onPressed: () => _runAction(
-            u.id,
-            () => widget.service.rejectRequest(relation.id),
-          ),
+          onPressed: () =>
+              _runAction(u.id, () => widget.service.rejectRequest(relation.id)),
           style: TextButton.styleFrom(
-            foregroundColor: Colors.white70,
+            foregroundColor: colors.appOnSurfaceMuted,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             minimumSize: const Size(0, 32),
           ),

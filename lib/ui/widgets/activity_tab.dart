@@ -1,5 +1,6 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/github_activity.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class ActivityTab extends StatelessWidget {
@@ -42,7 +43,7 @@ class ActivityTab extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
+                  color: colors.appOnSurfaceSubtle,
                 ),
               ),
             ),
@@ -63,7 +64,7 @@ class ActivityTab extends StatelessWidget {
             Text(
               l10n.homeActivityLoadError,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -72,7 +73,7 @@ class ActivityTab extends StatelessWidget {
               error!,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.white60,
+                color: colors.appOnSurfaceSubtle,
                 height: 1.5,
               ),
             ),
@@ -103,13 +104,15 @@ class ActivityTab extends StatelessWidget {
     ThemeData theme,
     AppLocalizations l10n,
   ) {
+    final colors = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           githubName ?? l10n.homeActivityDefaultName,
           style: theme.textTheme.titleLarge?.copyWith(
-            color: Colors.white,
+            color: colors.onSurface,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -117,7 +120,9 @@ class ActivityTab extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             l10n.homeActivityRecentSubtitle(githubLogin!),
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white60),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.appOnSurfaceSubtle,
+            ),
           ),
         ],
         const SizedBox(height: 16),
@@ -128,7 +133,7 @@ class ActivityTab extends StatelessWidget {
                 l10n.homeActivityEmpty,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
+                  color: colors.appOnSurfaceSubtle,
                   height: 1.5,
                 ),
               ),
@@ -148,10 +153,8 @@ class ActivityTab extends StatelessWidget {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      color: Colors.white.withValues(alpha: 0.05),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.22),
-                      ),
+                      color: colors.appSoftSurface,
+                      border: Border.all(color: accent.withValues(alpha: 0.22)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +180,7 @@ class ActivityTab extends StatelessWidget {
                               Text(
                                 _titleForActivity(l10n, activity.type),
                                 style: theme.textTheme.titleSmall?.copyWith(
-                                  color: Colors.white,
+                                  color: colors.onSurface,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -185,16 +188,19 @@ class ActivityTab extends StatelessWidget {
                               Text(
                                 _descriptionForActivity(l10n, activity),
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white70,
+                                  color: colors.appOnSurfaceMuted,
                                   height: 1.4,
                                 ),
                               ),
                               if (activity.createdAt != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  _formatRelativeTime(l10n, activity.createdAt!),
+                                  _formatRelativeTime(
+                                    l10n,
+                                    activity.createdAt!,
+                                  ),
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white38,
+                                    color: colors.appOnSurfaceFaint,
                                   ),
                                 ),
                               ],
@@ -234,10 +240,7 @@ String _titleForActivity(AppLocalizations l10n, String type) {
   }
 }
 
-String _descriptionForActivity(
-  AppLocalizations l10n,
-  GithubActivity activity,
-) {
+String _descriptionForActivity(AppLocalizations l10n, GithubActivity activity) {
   final repo = activity.repoName.isEmpty
       ? l10n.homeUnknownRepo
       : activity.repoName;
@@ -259,7 +262,11 @@ String _descriptionForActivity(
           if (firstCommit is Map<String, dynamic>) {
             final message = firstCommit['message']?.toString().trim();
             if (message != null && message.isNotEmpty) {
-              return l10n.activityDescCommitWithMessage(repo, commitCount, message);
+              return l10n.activityDescCommitWithMessage(
+                repo,
+                commitCount,
+                message,
+              );
             }
           }
         }

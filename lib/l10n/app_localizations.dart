@@ -302,6 +302,18 @@ abstract class AppLocalizations {
   /// **'System default'**
   String get homeLanguageSystem;
 
+  /// No description provided for @homeLanguageKorean.
+  ///
+  /// In en, this message translates to:
+  /// **'Korean'**
+  String get homeLanguageKorean;
+
+  /// No description provided for @homeLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get homeLanguageEnglish;
+
   /// No description provided for @homeSettingsLogout.
   ///
   /// In en, this message translates to:
@@ -678,11 +690,11 @@ abstract class AppLocalizations {
   /// **'Could not load pet info.'**
   String get friendDetailPetError;
 
-  /// No description provided for @friendDetailPetUnavailable.
+  /// No description provided for @friendDetailPetPrivate.
   ///
   /// In en, this message translates to:
-  /// **'Friend pet info is coming soon.'**
-  String get friendDetailPetUnavailable;
+  /// **'This friend\'s pet room is private.'**
+  String get friendDetailPetPrivate;
 
   /// No description provided for @friendDetailPetLevel.
   ///

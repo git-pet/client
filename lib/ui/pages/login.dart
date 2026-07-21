@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:client/config/app_env.dart';
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/services/activity_service.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -290,6 +291,12 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     final user = _currentUser;
     final login = user == null ? null : _displayLogin(user);
     final name = user == null ? null : _displayName(user);
+    final githubButtonBackground = theme.brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF1B1F23);
+    final githubButtonForeground = theme.brightness == Brightness.dark
+        ? const Color(0xFF1B1F23)
+        : Colors.white;
 
     return Scaffold(
       body: Center(
@@ -299,11 +306,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: colors.appPanelSurface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              border: Border.all(color: colors.appPanelBorder),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -320,14 +325,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                   l10n.appTitle,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: colors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   l10n.loginTagline,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white38,
+                    color: colors.appOnSurfaceFaint,
                   ),
                 ),
 
@@ -339,7 +344,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: colors.appSoftSurface,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -347,7 +352,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                         FaIcon(
                           FontAwesomeIcons.github,
                           size: 24,
-                          color: Colors.white70,
+                          color: colors.appOnSurfaceMuted,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -358,14 +363,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                                 login ?? '',
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: colors.onSurface,
                                 ),
                               ),
                               if (name != null)
                                 Text(
                                   name,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white38,
+                                    color: colors.appOnSurfaceFaint,
                                   ),
                                 ),
                             ],
@@ -404,20 +409,22 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                         ? null
                         : _signInWithGithub,
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF1B1F23),
-                      disabledBackgroundColor: Colors.white24,
+                      backgroundColor: githubButtonBackground,
+                      foregroundColor: githubButtonForeground,
+                      disabledBackgroundColor: colors.onSurface.withValues(
+                        alpha: 0.12,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: _isSubmitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Color(0xFF1B1F23),
+                              color: githubButtonForeground,
                             ),
                           )
                         : Row(
@@ -426,7 +433,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                               FaIcon(
                                 FontAwesomeIcons.github,
                                 size: 20,
-                                color: const Color(0xFF1B1F23),
+                                color: githubButtonForeground,
                               ),
                               const SizedBox(width: 10),
                               Text(
@@ -446,7 +453,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                   Text(
                     _statusMessage!,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white30,
+                      color: colors.appOnSurfaceFaint,
                     ),
                   ),
                 ],
