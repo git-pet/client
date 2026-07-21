@@ -31,10 +31,7 @@ class ActivityService {
     Duration(seconds: 10),
   ];
 
-  Future<void> backfillUserActivities({
-    int days = 90,
-    int limit = 300,
-  }) async {
+  Future<void> backfillUserActivities({int days = 90, int limit = 300}) async {
     Object? lastError;
     for (var attempt = 0; attempt <= _retryDelays.length; attempt++) {
       try {

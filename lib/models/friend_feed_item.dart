@@ -48,10 +48,7 @@ class FriendFeedItem {
 }
 
 class FriendFeedResponse {
-  const FriendFeedResponse({
-    required this.items,
-    this.nextCursor,
-  });
+  const FriendFeedResponse({required this.items, this.nextCursor});
 
   final List<FriendFeedItem> items;
   // null 이면 다음 페이지 없음(끝).
@@ -62,9 +59,9 @@ class FriendFeedResponse {
     return FriendFeedResponse(
       items: list is List
           ? list
-              .whereType<Map<String, dynamic>>()
-              .map(FriendFeedItem.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(FriendFeedItem.fromJson)
+                .toList()
           : const [],
       nextCursor: json['next_cursor']?.toString(),
     );

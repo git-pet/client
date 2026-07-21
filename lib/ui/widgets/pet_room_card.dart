@@ -18,6 +18,9 @@ class PetRoomCard extends StatelessWidget {
     required this.onMoodChanged,
     required this.onTap,
     this.progress,
+    this.isLoadingProgress = false,
+    this.progressError,
+    this.onRetryProgress,
   });
 
   final double height;
@@ -29,6 +32,9 @@ class PetRoomCard extends StatelessWidget {
   final VoidCallback onTap;
   // 서버 pet-progress 응답. null 이면 로드 전/실패 — 뱃지·진행바를 숨긴다.
   final PetState? progress;
+  final bool isLoadingProgress;
+  final String? progressError;
+  final Future<void> Function()? onRetryProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -76,10 +82,15 @@ class PetRoomCard extends StatelessWidget {
               if (progress != null) _ProgressChip(state: progress!),
             ],
           ),
-          if (progress != null) ...[
-            const SizedBox(height: 10),
-            _ExpBar(state: progress!),
-          ],
+          const SizedBox(height: 10),
+          if (progress != null)
+            _ExpBar(state: progress!)
+          else
+            _ProgressStatus(
+              isLoading: isLoadingProgress,
+              error: progressError,
+              onRetry: onRetryProgress,
+            ),
           const SizedBox(height: 20),
           Expanded(
             child: GestureDetector(
@@ -108,7 +119,7 @@ class PetRoomCard extends StatelessWidget {
                         child: SpriteAnimator(
                           assetPath: petType.spritePath(sprite.fileName),
                           frameCount: sprite.frameCount,
-                          size: petType.frameSize <= 16 ? 64 : 96,
+                          size: _spriteSize(petType, progress),
                           fps: 6,
                         ),
                       ),
@@ -146,6 +157,12 @@ class PetRoomCard extends StatelessWidget {
       ),
     );
   }
+}
+
+double _spriteSize(PetType petType, PetState? state) {
+  final base = petType.frameSize <= 16 ? 64.0 : 96.0;
+  if (state == null) return base;
+  return base * (0.84 + state.stage.index * 0.08);
 }
 
 // stage 아이콘 + Lv.N 을 하나의 알약 형태로 표시한다.
@@ -230,6 +247,79 @@ class _ExpBar extends StatelessWidget {
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _ProgressStatus extends StatelessWidget {
+  const _ProgressStatus({
+    required this.isLoading,
+    required this.error,
+    required this.onRetry,
+  });
+
+  final bool isLoading;
+  final String? error;
+  final Future<void> Function()? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final hasError = error != null;
+    final iconColor = hasError ? colors.error : colors.primary;
+    final message = isLoading
+        ? l10n.homePetProgressLoading
+        : hasError
+        ? l10n.homePetProgressLoadError
+        : l10n.homePetProgressEmpty;
+
+    return Row(
+      children: [
+        if (isLoading)
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colors.primary,
+            ),
+          )
+        else
+          Tooltip(
+            message: error ?? message,
+            child: Icon(
+              hasError ? Icons.error_outline_rounded : Icons.info_rounded,
+              size: 16,
+              color: iconColor,
+            ),
+          ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            message,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.white60,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        if (hasError && onRetry != null)
+          IconButton(
+            tooltip: l10n.homePetProgressRetry,
+            onPressed: () => onRetry!(),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            style: IconButton.styleFrom(
+              minimumSize: const Size(32, 32),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              foregroundColor: colors.error,
+            ),
+          ),
       ],
     );
   }

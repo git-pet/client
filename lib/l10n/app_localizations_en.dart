@@ -79,6 +79,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePetRoomTitle => 'My pet room';
 
   @override
+  String get homePetProgressLoading => 'Loading pet progress...';
+
+  @override
+  String get homePetProgressLoadError => 'Could not load pet progress.';
+
+  @override
+  String get homePetProgressEmpty => 'No pet progress yet.';
+
+  @override
+  String get homePetProgressRetry => 'Try again';
+
+  @override
   String get homeTabActivity => 'Activity';
 
   @override
@@ -98,7 +110,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Expand the tab to load your friends\' recent activity.';
 
   @override
-  String get friendFeedEmpty => 'No friend activity yet.';
+  String get friendFeedEmpty => 'No recent activity from your friends yet.';
 
   @override
   String get friendFeedLoadError => 'Could not load friend activity.';
@@ -283,33 +295,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String activityDescReleaseNoTag(String repo) {
     return '$repo · release published';
-  }
-
-  @override
-  String get friendFeedTitle => 'Friend activity';
-
-  @override
-  String get friendFeedSegmentFeed => 'Activity';
-
-  @override
-  String get friendFeedSegmentFriends => 'Friends';
-
-  @override
-  String get friendFeedInvalidResponse =>
-      'Friend activity response was invalid.';
-
-  @override
-  String get friendFeedLoadMoreError => 'Try loading more again';
-
-  @override
-  String get friendFeedEnd => 'You\'re all caught up.';
-
-  @override
-  String get friendFeedUnknownFriend => 'Friend';
-
-  @override
-  String friendFeedXp(int xp) {
-    return '+$xp XP';
   }
 
   @override

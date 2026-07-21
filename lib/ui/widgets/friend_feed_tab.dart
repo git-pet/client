@@ -1,6 +1,7 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/friend_feed_item.dart';
 import 'package:client/services/activity_service.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 // 친구들의 최근 활동 스트림 (friend-feed Edge Function).
@@ -112,7 +113,7 @@ class _FriendFeedTabState extends State<FriendFeedTab> {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
+                  color: colors.appOnSurfaceSubtle,
                 ),
               ),
             ),
@@ -133,7 +134,7 @@ class _FriendFeedTabState extends State<FriendFeedTab> {
             Text(
               l10n.friendFeedLoadError,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -142,7 +143,7 @@ class _FriendFeedTabState extends State<FriendFeedTab> {
               _error!,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.white60,
+                color: colors.appOnSurfaceSubtle,
                 height: 1.5,
               ),
             ),
@@ -168,6 +169,8 @@ class _FriendFeedTabState extends State<FriendFeedTab> {
   }
 
   Widget _buildFeed(ThemeData theme, AppLocalizations l10n) {
+    final colors = theme.colorScheme;
+
     if (_items.isEmpty) {
       return RefreshIndicator(
         onRefresh: () => _load(reset: true),
@@ -180,7 +183,7 @@ class _FriendFeedTabState extends State<FriendFeedTab> {
                 l10n.friendFeedEmpty,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
+                  color: colors.appOnSurfaceSubtle,
                   height: 1.5,
                 ),
               ),
@@ -232,8 +235,8 @@ class _FeedRow extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.05),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        color: colors.appSoftSurface,
+        border: Border.all(color: colors.appPanelBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +250,7 @@ class _FeedRow extends StatelessWidget {
                 Text.rich(
                   TextSpan(
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                      color: colors.onSurface,
                     ),
                     children: [
                       TextSpan(
@@ -257,7 +260,7 @@ class _FeedRow extends StatelessWidget {
                       const TextSpan(text: '  '),
                       TextSpan(
                         text: _titleForEvent(l10n, item.eventType),
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
+                        style: TextStyle(color: colors.appOnSurfaceMuted),
                       ),
                     ],
                   ),
@@ -274,7 +277,7 @@ class _FeedRow extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white54,
+                            color: colors.appOnSurfaceSubtle,
                           ),
                         ),
                       ),
@@ -302,7 +305,7 @@ class _FeedRow extends StatelessWidget {
                       Text(
                         _formatRelativeTime(l10n, item.occurredAt!),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white38,
+                          color: colors.appOnSurfaceFaint,
                         ),
                       ),
                     ],
@@ -320,9 +323,10 @@ class _FeedRow extends StatelessWidget {
 class _Dot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 6),
-      child: Text('·', style: TextStyle(color: Colors.white38)),
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Text('·', style: TextStyle(color: colors.appOnSurfaceFaint)),
     );
   }
 }
@@ -351,10 +355,7 @@ class _Avatar extends StatelessWidget {
       backgroundColor: colors.primary.withValues(alpha: 0.18),
       child: Text(
         letter,
-        style: TextStyle(
-          color: colors.primary,
-          fontWeight: FontWeight.w800,
-        ),
+        style: TextStyle(color: colors.primary, fontWeight: FontWeight.w800),
       ),
     );
   }

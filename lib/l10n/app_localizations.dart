@@ -224,6 +224,30 @@ abstract class AppLocalizations {
   /// **'My pet room'**
   String get homePetRoomTitle;
 
+  /// No description provided for @homePetProgressLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading pet progress...'**
+  String get homePetProgressLoading;
+
+  /// No description provided for @homePetProgressLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load pet progress.'**
+  String get homePetProgressLoadError;
+
+  /// No description provided for @homePetProgressEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pet progress yet.'**
+  String get homePetProgressEmpty;
+
+  /// No description provided for @homePetProgressRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get homePetProgressRetry;
+
   /// No description provided for @homeTabActivity.
   ///
   /// In en, this message translates to:
@@ -263,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendFeedEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No friend activity yet.'**
+  /// **'No recent activity from your friends yet.'**
   String get friendFeedEmpty;
 
   /// No description provided for @friendFeedLoadError.
@@ -557,54 +581,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{repo} · release published'**
   String activityDescReleaseNoTag(String repo);
-
-  /// No description provided for @friendFeedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Friend activity'**
-  String get friendFeedTitle;
-
-  /// No description provided for @friendFeedSegmentFeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get friendFeedSegmentFeed;
-
-  /// No description provided for @friendFeedSegmentFriends.
-  ///
-  /// In en, this message translates to:
-  /// **'Friends'**
-  String get friendFeedSegmentFriends;
-
-  /// No description provided for @friendFeedInvalidResponse.
-  ///
-  /// In en, this message translates to:
-  /// **'Friend activity response was invalid.'**
-  String get friendFeedInvalidResponse;
-
-  /// No description provided for @friendFeedLoadMoreError.
-  ///
-  /// In en, this message translates to:
-  /// **'Try loading more again'**
-  String get friendFeedLoadMoreError;
-
-  /// No description provided for @friendFeedEnd.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'re all caught up.'**
-  String get friendFeedEnd;
-
-  /// No description provided for @friendFeedUnknownFriend.
-  ///
-  /// In en, this message translates to:
-  /// **'Friend'**
-  String get friendFeedUnknownFriend;
-
-  /// No description provided for @friendFeedXp.
-  ///
-  /// In en, this message translates to:
-  /// **'+{xp} XP'**
-  String friendFeedXp(int xp);
 
   /// No description provided for @friendsCollapsedHint.
   ///

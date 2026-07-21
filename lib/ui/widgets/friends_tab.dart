@@ -5,11 +5,8 @@ import 'package:client/models/friend.dart';
 import 'package:client/models/pet_state.dart';
 import 'package:client/services/friends_service.dart';
 import 'package:client/ui/pages/friend_detail.dart';
-import 'package:client/ui/widgets/friend_activity_feed.dart';
 import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-
-enum _FriendsTabView { feed, friends }
 
 class FriendsTab extends StatefulWidget {
   const FriendsTab({super.key, required this.isExpanded});
@@ -133,10 +130,8 @@ class _FriendsTabState extends State<FriendsTab> {
   Future<void> _openFriendDetail(Friendship f) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => FriendDetailPage(
-          friendship: f,
-          pet: _petsByUserId[f.otherUser.id],
-        ),
+        builder: (_) =>
+            FriendDetailPage(friendship: f, pet: _petsByUserId[f.otherUser.id]),
       ),
     );
   }
@@ -293,68 +288,72 @@ class _FriendsTabState extends State<FriendsTab> {
             ),
           )
         else
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                children: [
-                  if (data.incoming.isNotEmpty) ...[
-                    _SectionHeader(label: l10n.friendsSectionIncoming),
-                    ...data.incoming.map(
-                      (f) => _FriendRow(
-                        friendship: f,
-                        actions: [
-                          _RowAction(
-                            label: l10n.friendsActionAccept,
-                            primary: true,
-                            onTap: () => _accept(f),
-                          ),
-                          _RowAction(
-                            label: l10n.friendsActionReject,
-                            onTap: () => _reject(f),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (data.friends.isNotEmpty) ...[
-                    _SectionHeader(label: l10n.friendsSectionFriends),
-                    ...data.friends.map(
-                      (f) => _FriendRow(
-                        friendship: f,
-                        pet: _petsByUserId[f.otherUser.id],
-                        onTap: () => _openFriendDetail(f),
-                        actions: [
-                          _RowAction(
-                            label: l10n.friendsActionRemove,
-                            destructive: true,
-                            onTap: () => _delete(f, confirm: true),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (data.outgoing.isNotEmpty) ...[
-                    _SectionHeader(label: l10n.friendsSectionOutgoing),
-                    ...data.outgoing.map(
-                      (f) => _FriendRow(
-                        friendship: f,
-                        actions: [
-                          _RowAction(
-                            label: l10n.friendsActionCancel,
-                            onTap: () => _delete(f),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+          Expanded(child: _buildFriendsList(data)),
+      ],
+    );
+  }
+
+  Widget _buildFriendsList(FriendsData visibleData) {
+    final l10n = AppLocalizations.of(context);
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          if (visibleData.incoming.isNotEmpty) ...[
+            _SectionHeader(label: l10n.friendsSectionIncoming),
+            ...visibleData.incoming.map(
+              (f) => _FriendRow(
+                friendship: f,
+                actions: [
+                  _RowAction(
+                    label: l10n.friendsActionAccept,
+                    primary: true,
+                    onTap: () => _accept(f),
+                  ),
+                  _RowAction(
+                    label: l10n.friendsActionReject,
+                    onTap: () => _reject(f),
+                  ),
                 ],
               ),
             ),
-          ),
-      ],
+            const SizedBox(height: 16),
+          ],
+          if (visibleData.friends.isNotEmpty) ...[
+            _SectionHeader(label: l10n.friendsSectionFriends),
+            ...visibleData.friends.map(
+              (f) => _FriendRow(
+                friendship: f,
+                pet: _petsByUserId[f.otherUser.id],
+                onTap: () => _openFriendDetail(f),
+                actions: [
+                  _RowAction(
+                    label: l10n.friendsActionRemove,
+                    destructive: true,
+                    onTap: () => _delete(f, confirm: true),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (visibleData.outgoing.isNotEmpty) ...[
+            _SectionHeader(label: l10n.friendsSectionOutgoing),
+            ...visibleData.outgoing.map(
+              (f) => _FriendRow(
+                friendship: f,
+                actions: [
+                  _RowAction(
+                    label: l10n.friendsActionCancel,
+                    onTap: () => _delete(f),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

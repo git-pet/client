@@ -58,29 +58,41 @@ class _HomePageState extends State<HomePage> {
   // 서버가 관리하는 펫 상태 (level/exp/stage/mood).
   // null 이면 로드 실패 or 로드 전 — 스프라이트는 로컬 값으로 계속 렌더한다.
   PetState? _petProgress;
+  bool _isLoadingPetProgress = true;
+  String? _petProgressError;
 
   SpriteInfo get _sprite => petSprites[_petType]![_mood]!;
 
   @override
   void initState() {
     super.initState();
-    _loadGithubActivities();
-    _loadPetProgress();
+    _refreshHomeData();
   }
 
   // pet-progress GET 은 조회 전용. XP 적용은 서버 webhook 경로가 담당한다.
-  // 실패는 조용히 무시 — 다음 새로고침(pull-to-refresh 등)에서 재시도.
   Future<void> _loadPetProgress() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingPetProgress = true;
+      _petProgressError = null;
+    });
+
     try {
       final progress = await _petService.loadPetProgress();
       if (!mounted) return;
-      setState(() => _petProgress = progress);
+      setState(() {
+        _petProgress = progress;
+        _mood = _moodFromApi(progress.mood) ?? _mood;
+        _isLoadingPetProgress = false;
+      });
     } on PetAuthRequiredException {
-      await _handleUnauthorized();
-    } catch (_) {
-      // 홈 화면 자체는 정상 동작해야 하므로, 실패 시 배지만 비운다.
       if (!mounted) return;
-      setState(() => _petProgress = null);
+      setState(() => _isLoadingPetProgress = false);
+      await _handleUnauthorized(retry: _loadPetProgress);
+    } on PetServiceException catch (error) {
+      _setPetProgressError(error.toString());
+    } catch (error) {
+      _setPetProgressError(error.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -102,9 +114,7 @@ class _HomePageState extends State<HomePage> {
     } on GithubAuthRequiredException {
       await _handleUnauthorized();
     } on GithubUserNotConfiguredException {
-      _setActivityError(
-        AppLocalizations.of(context).homeActivityUserNotFound,
-      );
+      _setActivityError(AppLocalizations.of(context).homeActivityUserNotFound);
     } on GithubApiException catch (e) {
       _setActivityError(
         AppLocalizations.of(context).homeActivityFetchFailed(e.statusCode),
@@ -126,18 +136,50 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _setPetProgressError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _petProgress = null;
+      _petProgressError = message;
+      _isLoadingPetProgress = false;
+    });
+  }
+
+  Future<void> _refreshHomeData() async {
+    await _loadGithubActivities();
+    if (!mounted) return;
+    await _loadPetProgress();
+  }
+
+  PetMood? _moodFromApi(String? raw) {
+    switch (raw) {
+      case 'happy':
+        return PetMood.excited;
+      case 'normal':
+        return PetMood.idle;
+      case 'sad':
+        return PetMood.sad;
+      case 'sleeping':
+        return PetMood.sleep;
+    }
+    for (final mood in PetMood.values) {
+      if (mood.name == raw) return mood;
+    }
+    return null;
+  }
+
   // 갱신 재시도 사이클에서 두 번째 401이 다시 여기로 들어와 무한 루프가 되는 걸
   // 막는 재진입 가드. 첫 401이면 refresh 시도, 재시도까지 실패하면 로그아웃.
   bool _refreshInFlight = false;
 
-  Future<void> _handleUnauthorized() async {
+  Future<void> _handleUnauthorized({Future<void> Function()? retry}) async {
     if (!mounted) return;
 
     if (!_refreshInFlight) {
       _refreshInFlight = true;
       try {
         await _githubService.refreshAccessToken();
-        await _loadGithubActivities();
+        await (retry ?? _loadGithubActivities)();
         return;
       } catch (_) {
         // fallthrough — refresh 실패 시 아래 로그아웃 흐름으로.
@@ -192,7 +234,6 @@ class _HomePageState extends State<HomePage> {
       case HomeSettingsAction.logout:
         await _logout();
         break;
-        
     }
   }
 
@@ -218,7 +259,10 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Widget _buildTabContent(BoxConstraints contentConstraints, List<String> tabs) {
+  Widget _buildTabContent(
+    BoxConstraints contentConstraints,
+    List<String> tabs,
+  ) {
     switch (_selectedTabIndex) {
       case 0:
         return ActivityTab(
@@ -228,7 +272,7 @@ class _HomePageState extends State<HomePage> {
           githubLogin: _githubLogin,
           error: _activityError,
           activities: _activities,
-          onRetry: _loadGithubActivities,
+          onRetry: _refreshHomeData,
         );
       case 1:
         return FriendsTab(isExpanded: _isTabPanelExpanded);
@@ -275,9 +319,12 @@ class _HomePageState extends State<HomePage> {
                           petType: _petType,
                           sprite: _sprite,
                           progress: _petProgress,
+                          isLoadingProgress: _isLoadingPetProgress,
+                          progressError: _petProgressError,
                           mood: _mood,
                           showCollapseHint: _isTabPanelExpanded,
                           onMoodChanged: (m) => setState(() => _mood = m),
+                          onRetryProgress: _loadPetProgress,
                           onTap: _collapseTabPanel,
                         ),
                         const SizedBox(height: _tabPanelGap),

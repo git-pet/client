@@ -28,6 +28,10 @@
 
   "homeAppTitle": "GitPet Home",
   "homePetRoomTitle": "My pet room",
+  "homePetProgressLoading": "Loading pet progress...",
+  "homePetProgressLoadError": "Could not load pet progress.",
+  "homePetProgressEmpty": "No pet progress yet.",
+  "homePetProgressRetry": "Try again",
 
   "homeTabActivity": "Activity",
   "homeTabFriends": "Friends",
@@ -164,21 +168,6 @@
   "activityDescReleaseNoTag": "{repo} · release published",
   "@activityDescReleaseNoTag": {
     "placeholders": { "repo": { "type": "String" } }
-  },
-
-  "friendFeedTitle": "Friend activity",
-  "friendFeedSegmentFeed": "Activity",
-  "friendFeedSegmentFriends": "Friends",
-  "friendFeedLoadError": "Could not load friend activity.",
-  "friendFeedInvalidResponse": "Friend activity response was invalid.",
-  "friendFeedRetry": "Try again",
-  "friendFeedEmpty": "No friend activity yet.",
-  "friendFeedLoadMoreError": "Try loading more again",
-  "friendFeedEnd": "You're all caught up.",
-  "friendFeedUnknownFriend": "Friend",
-  "friendFeedXp": "+{xp} XP",
-  "@friendFeedXp": {
-    "placeholders": { "xp": { "type": "int" } }
   },
 
   "friendsCollapsedHint": "Expand the tab to load your friends.",
