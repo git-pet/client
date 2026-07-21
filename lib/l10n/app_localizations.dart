@@ -248,6 +248,12 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get homePetProgressRetry;
 
+  /// No description provided for @homeStatsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get homeStatsOpen;
+
   /// No description provided for @homeTabActivity.
   ///
   /// In en, this message translates to:
@@ -301,6 +307,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get friendFeedRetry;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity stats'**
+  String get statsTitle;
+
+  /// No description provided for @statsDailyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get statsDailyTab;
+
+  /// No description provided for @statsWeeklyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get statsWeeklyTab;
+
+  /// No description provided for @statsEventsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get statsEventsTab;
+
+  /// No description provided for @statsDailyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days XP'**
+  String get statsDailyTitle;
+
+  /// No description provided for @statsWeeklyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 12 weeks XP'**
+  String get statsWeeklyTitle;
+
+  /// No description provided for @statsEventsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'By event'**
+  String get statsEventsTitle;
+
+  /// No description provided for @statsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity stats to show yet.'**
+  String get statsEmpty;
+
+  /// No description provided for @statsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load activity stats.'**
+  String get statsLoadError;
+
+  /// No description provided for @statsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get statsRetry;
+
+  /// No description provided for @statsNoDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'No daily stats for the last 30 days.'**
+  String get statsNoDaily;
+
+  /// No description provided for @statsNoWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'No weekly stats for the last 12 weeks.'**
+  String get statsNoWeekly;
+
+  /// No description provided for @statsNoEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No event stats yet.'**
+  String get statsNoEvents;
+
+  /// No description provided for @statsEventPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Push'**
+  String get statsEventPush;
+
+  /// No description provided for @statsEventPullRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'PR'**
+  String get statsEventPullRequest;
+
+  /// No description provided for @statsEventIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue'**
+  String get statsEventIssue;
+
+  /// No description provided for @statsEventStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Star'**
+  String get statsEventStar;
+
+  /// No description provided for @statsEventOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get statsEventOther;
 
   /// No description provided for @homeTabCollapseHint.
   ///

@@ -74,7 +74,7 @@ class PetRoomCard extends StatelessWidget {
                 child: Text(
                   l10n.homePetRoomTitle,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
+                    color: colors.onSurface,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -234,7 +234,7 @@ class _ExpBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: state.progress,
             minHeight: 6,
-            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            backgroundColor: colors.onSurface.withValues(alpha: 0.08),
             valueColor: AlwaysStoppedAnimation(colors.primary),
           ),
         ),
@@ -243,7 +243,7 @@ class _ExpBar extends StatelessWidget {
           '${state.expInLevel} / ${state.nextLevelExp} XP',
           textAlign: TextAlign.right,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.white54,
+            color: colors.appOnSurfaceSubtle,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
@@ -303,7 +303,7 @@ class _ProgressStatus extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.white60,
+              color: colors.appOnSurfaceSubtle,
               fontWeight: FontWeight.w600,
             ),
           ),
