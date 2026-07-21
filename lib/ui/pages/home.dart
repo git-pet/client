@@ -5,6 +5,7 @@ import 'package:client/models/pet_state.dart';
 import 'package:client/services/github_service.dart';
 import 'package:client/services/pet_service.dart';
 import 'package:client/ui/widgets/activity_tab.dart';
+import 'package:client/ui/widgets/friend_feed_tab.dart';
 import 'package:client/ui/widgets/friends_tab.dart';
 import 'package:client/ui/widgets/home_header.dart';
 import 'package:client/ui/widgets/home_tab_section.dart';
@@ -37,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   List<String> _tabs(AppLocalizations l10n) => [
     l10n.homeTabActivity,
     l10n.homeTabFriends,
+    l10n.homeTabFriendFeed,
     l10n.homeTabExplore,
     l10n.homeTabShop,
   ];
@@ -274,6 +276,8 @@ class _HomePageState extends State<HomePage> {
         );
       case 1:
         return FriendsTab(isExpanded: _isTabPanelExpanded);
+      case 2:
+        return FriendFeedTab(isExpanded: _isTabPanelExpanded);
       default:
         return PlaceholderTabContent(
           label: tabs[_selectedTabIndex],

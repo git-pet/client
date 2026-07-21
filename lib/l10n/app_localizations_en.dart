@@ -97,10 +97,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTabFriends => 'Friends';
 
   @override
+  String get homeTabFriendFeed => 'Feed';
+
+  @override
   String get homeTabExplore => 'Explore';
 
   @override
   String get homeTabShop => 'Shop';
+
+  @override
+  String get friendFeedCollapsedHint =>
+      'Expand the tab to load your friends\' recent activity.';
+
+  @override
+  String get friendFeedEmpty => 'No recent activity from your friends yet.';
+
+  @override
+  String get friendFeedLoadError => 'Could not load friend activity.';
+
+  @override
+  String get friendFeedRetry => 'Try again';
 
   @override
   String get homeTabCollapseHint => 'Tap this area to collapse the panel.';
@@ -279,42 +295,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String activityDescReleaseNoTag(String repo) {
     return '$repo · release published';
-  }
-
-  @override
-  String get friendFeedTitle => 'Friend activity';
-
-  @override
-  String get friendFeedSegmentFeed => 'Activity';
-
-  @override
-  String get friendFeedSegmentFriends => 'Friends';
-
-  @override
-  String get friendFeedLoadError => 'Could not load friend activity.';
-
-  @override
-  String get friendFeedInvalidResponse =>
-      'Friend activity response was invalid.';
-
-  @override
-  String get friendFeedRetry => 'Try again';
-
-  @override
-  String get friendFeedEmpty => 'No friend activity yet.';
-
-  @override
-  String get friendFeedLoadMoreError => 'Try loading more again';
-
-  @override
-  String get friendFeedEnd => 'You\'re all caught up.';
-
-  @override
-  String get friendFeedUnknownFriend => 'Friend';
-
-  @override
-  String friendFeedXp(int xp) {
-    return '+$xp XP';
   }
 
   @override

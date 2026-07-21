@@ -260,6 +260,12 @@ abstract class AppLocalizations {
   /// **'Friends'**
   String get homeTabFriends;
 
+  /// No description provided for @homeTabFriendFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get homeTabFriendFeed;
+
   /// No description provided for @homeTabExplore.
   ///
   /// In en, this message translates to:
@@ -271,6 +277,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shop'**
   String get homeTabShop;
+
+  /// No description provided for @friendFeedCollapsedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand the tab to load your friends\' recent activity.'**
+  String get friendFeedCollapsedHint;
+
+  /// No description provided for @friendFeedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent activity from your friends yet.'**
+  String get friendFeedEmpty;
+
+  /// No description provided for @friendFeedLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load friend activity.'**
+  String get friendFeedLoadError;
+
+  /// No description provided for @friendFeedRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get friendFeedRetry;
 
   /// No description provided for @homeTabCollapseHint.
   ///
@@ -551,72 +581,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{repo} · release published'**
   String activityDescReleaseNoTag(String repo);
-
-  /// No description provided for @friendFeedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Friend activity'**
-  String get friendFeedTitle;
-
-  /// No description provided for @friendFeedSegmentFeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get friendFeedSegmentFeed;
-
-  /// No description provided for @friendFeedSegmentFriends.
-  ///
-  /// In en, this message translates to:
-  /// **'Friends'**
-  String get friendFeedSegmentFriends;
-
-  /// No description provided for @friendFeedLoadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load friend activity.'**
-  String get friendFeedLoadError;
-
-  /// No description provided for @friendFeedInvalidResponse.
-  ///
-  /// In en, this message translates to:
-  /// **'Friend activity response was invalid.'**
-  String get friendFeedInvalidResponse;
-
-  /// No description provided for @friendFeedRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get friendFeedRetry;
-
-  /// No description provided for @friendFeedEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No friend activity yet.'**
-  String get friendFeedEmpty;
-
-  /// No description provided for @friendFeedLoadMoreError.
-  ///
-  /// In en, this message translates to:
-  /// **'Try loading more again'**
-  String get friendFeedLoadMoreError;
-
-  /// No description provided for @friendFeedEnd.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'re all caught up.'**
-  String get friendFeedEnd;
-
-  /// No description provided for @friendFeedUnknownFriend.
-  ///
-  /// In en, this message translates to:
-  /// **'Friend'**
-  String get friendFeedUnknownFriend;
-
-  /// No description provided for @friendFeedXp.
-  ///
-  /// In en, this message translates to:
-  /// **'+{xp} XP'**
-  String friendFeedXp(int xp);
 
   /// No description provided for @friendsCollapsedHint.
   ///

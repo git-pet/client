@@ -94,10 +94,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeTabFriends => '친구';
 
   @override
+  String get homeTabFriendFeed => '피드';
+
+  @override
   String get homeTabExplore => '탐색';
 
   @override
   String get homeTabShop => '상점';
+
+  @override
+  String get friendFeedCollapsedHint => '탭을 확장하면 친구들의 최근 활동을 불러옵니다.';
+
+  @override
+  String get friendFeedEmpty => '친구들의 최근 활동이 아직 없어요.';
+
+  @override
+  String get friendFeedLoadError => '친구 활동을 불러오지 못했습니다.';
+
+  @override
+  String get friendFeedRetry => '다시 시도';
 
   @override
   String get homeTabCollapseHint => '탭을 접으려면 이 영역을 누르세요.';
@@ -271,41 +286,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String activityDescReleaseNoTag(String repo) {
     return '$repo · 릴리즈 게시';
-  }
-
-  @override
-  String get friendFeedTitle => '친구 활동';
-
-  @override
-  String get friendFeedSegmentFeed => '활동';
-
-  @override
-  String get friendFeedSegmentFriends => '친구';
-
-  @override
-  String get friendFeedLoadError => '친구 활동을 불러오지 못했습니다.';
-
-  @override
-  String get friendFeedInvalidResponse => '친구 활동 응답 형식이 올바르지 않습니다.';
-
-  @override
-  String get friendFeedRetry => '다시 시도';
-
-  @override
-  String get friendFeedEmpty => '아직 표시할 친구 활동이 없습니다.';
-
-  @override
-  String get friendFeedLoadMoreError => '더 불러오기를 다시 시도';
-
-  @override
-  String get friendFeedEnd => '모든 활동을 확인했습니다.';
-
-  @override
-  String get friendFeedUnknownFriend => '친구';
-
-  @override
-  String friendFeedXp(int xp) {
-    return '+$xp XP';
   }
 
   @override

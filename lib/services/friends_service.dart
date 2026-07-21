@@ -1,5 +1,4 @@
 import 'package:client/models/friend.dart';
-import 'package:client/models/friend_activity.dart';
 import 'package:client/models/pet_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,10 +14,6 @@ class FriendsSelfRequestException implements Exception {
   const FriendsSelfRequestException();
 }
 
-class FriendFeedInvalidResponseException implements Exception {
-  const FriendFeedInvalidResponseException();
-}
-
 class FriendsServiceException implements Exception {
   const FriendsServiceException(this.message);
   final String message;
@@ -32,7 +27,6 @@ class FriendsServiceException implements Exception {
 class FriendsService {
   static const _friendshipsTable = 'friendships';
   static const _usersTable = 'users';
-  static const _friendFeedFunction = 'friend-feed';
 
   // PostgREST 임베디드 셀렉트. FK가 friendships.requester_id → users.id,
   // friendships.receiver_id → users.id 로 정의돼 있어야 동작.
@@ -102,58 +96,6 @@ class FriendsService {
           .toList();
     } on PostgrestException catch (error) {
       throw FriendsServiceException(error.message);
-    }
-  }
-
-  Future<FriendActivityPage> fetchFriendFeed({
-    int limit = 30,
-    String? cursor,
-  }) async {
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentUser;
-    if (user == null) {
-      throw const FriendsAuthRequiredException();
-    }
-
-    try {
-      final response = await supabase.functions.invoke(
-        _friendFeedFunction,
-        method: HttpMethod.get,
-        queryParameters: {
-          'limit': limit.toString(),
-          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
-        },
-      );
-
-      final data = response.data;
-      if (data is! Map) {
-        throw const FriendFeedInvalidResponseException();
-      }
-
-      final rawItems = data['items'];
-      if (rawItems is! List) {
-        throw const FriendFeedInvalidResponseException();
-      }
-
-      final items = rawItems
-          .whereType<Map>()
-          .map((row) => FriendActivity.fromJson(Map<String, dynamic>.from(row)))
-          .toList();
-      final nextCursor = data['next_cursor']?.toString();
-
-      return FriendActivityPage(
-        items: items,
-        nextCursor: nextCursor == null || nextCursor.isEmpty
-            ? null
-            : nextCursor,
-      );
-    } on AuthException {
-      throw const FriendsAuthRequiredException();
-    } on FunctionException catch (error) {
-      if (error.status == 401) {
-        throw const FriendsAuthRequiredException();
-      }
-      throw FriendsServiceException(_messageFromFunctionError(error));
     }
   }
 
@@ -280,14 +222,4 @@ class FriendsService {
       throw FriendsServiceException(error.message);
     }
   }
-}
-
-String _messageFromFunctionError(FunctionException error) {
-  final details = error.details;
-  if (details is Map) {
-    final message = details['error'] ?? details['message'];
-    if (message != null) return message.toString();
-  }
-  if (details is String && details.isNotEmpty) return details;
-  return error.reasonPhrase ?? 'Function error (${error.status})';
 }

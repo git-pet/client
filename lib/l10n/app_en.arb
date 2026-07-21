@@ -35,8 +35,14 @@
 
   "homeTabActivity": "Activity",
   "homeTabFriends": "Friends",
+  "homeTabFriendFeed": "Feed",
   "homeTabExplore": "Explore",
   "homeTabShop": "Shop",
+
+  "friendFeedCollapsedHint": "Expand the tab to load your friends' recent activity.",
+  "friendFeedEmpty": "No recent activity from your friends yet.",
+  "friendFeedLoadError": "Could not load friend activity.",
+  "friendFeedRetry": "Try again",
 
   "homeTabCollapseHint": "Tap this area to collapse the panel.",
   "homeTabPlaceholder": "{tab} content will appear here.",
@@ -162,21 +168,6 @@
   "activityDescReleaseNoTag": "{repo} · release published",
   "@activityDescReleaseNoTag": {
     "placeholders": { "repo": { "type": "String" } }
-  },
-
-  "friendFeedTitle": "Friend activity",
-  "friendFeedSegmentFeed": "Activity",
-  "friendFeedSegmentFriends": "Friends",
-  "friendFeedLoadError": "Could not load friend activity.",
-  "friendFeedInvalidResponse": "Friend activity response was invalid.",
-  "friendFeedRetry": "Try again",
-  "friendFeedEmpty": "No friend activity yet.",
-  "friendFeedLoadMoreError": "Try loading more again",
-  "friendFeedEnd": "You're all caught up.",
-  "friendFeedUnknownFriend": "Friend",
-  "friendFeedXp": "+{xp} XP",
-  "@friendFeedXp": {
-    "placeholders": { "xp": { "type": "int" } }
   },
 
   "friendsCollapsedHint": "Expand the tab to load your friends.",

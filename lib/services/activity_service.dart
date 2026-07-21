@@ -1,3 +1,4 @@
+import 'package:client/models/friend_feed_item.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // backfill-user-activities Edge Function 계약
@@ -30,10 +31,7 @@ class ActivityService {
     Duration(seconds: 10),
   ];
 
-  Future<void> backfillUserActivities({
-    int days = 90,
-    int limit = 300,
-  }) async {
+  Future<void> backfillUserActivities({int days = 90, int limit = 300}) async {
     Object? lastError;
     for (var attempt = 0; attempt <= _retryDelays.length; attempt++) {
       try {
@@ -62,5 +60,39 @@ class ActivityService {
     throw ActivityServiceException(
       lastError?.toString() ?? 'backfill-user-activities 재시도 후에도 실패',
     );
+  }
+
+  // friend-feed Edge Function 호출.
+  //   응답: { items: [...], next_cursor: opaque-base64 | null }
+  //   limit 은 서버가 [1, 100] 로 클램프한다. cursor 는 이전 호출의
+  //   next_cursor 를 그대로 넘겨야 하며, null 이면 첫 페이지.
+  Future<FriendFeedResponse> loadFriendFeed({
+    int limit = 30,
+    String? cursor,
+  }) async {
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'friend-feed',
+        method: HttpMethod.get,
+        queryParameters: {
+          'limit': '$limit',
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        },
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return FriendFeedResponse.fromJson(data);
+      }
+      return const FriendFeedResponse(items: []);
+    } on AuthException {
+      throw const ActivityAuthRequiredException();
+    } on FunctionException catch (error) {
+      if (error.status == 401) {
+        throw const ActivityAuthRequiredException();
+      }
+      throw ActivityServiceException(
+        error.details?.toString() ?? 'friend-feed 호출 실패 (${error.status})',
+      );
+    }
   }
 }
