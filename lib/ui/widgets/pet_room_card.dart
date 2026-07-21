@@ -1,5 +1,6 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/pet.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:client/ui/widgets/debug_mood_selector.dart';
 import 'package:client/ui/widgets/sprite_animator.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -42,13 +43,9 @@ class PetRoomCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            colors.secondaryContainer,
-            colors.surface,
-            colors.surface,
-          ],
+          colors: [colors.secondaryContainer, colors.surface, colors.surface],
         ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: colors.appPanelBorder),
         boxShadow: [
           BoxShadow(
             color: colors.primary.withValues(alpha: 0.08),
@@ -63,7 +60,7 @@ class PetRoomCard extends StatelessWidget {
           Text(
             l10n.homePetRoomTitle,
             style: theme.textTheme.titleLarge?.copyWith(
-              color: Colors.white,
+              color: colors.onSurface,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -75,7 +72,7 @@ class PetRoomCard extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: Colors.white.withValues(alpha: 0.04),
+                  color: colors.appSofterSurface,
                   border: Border.all(
                     color: colors.primary.withValues(alpha: 0.25),
                   ),
