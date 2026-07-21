@@ -19,6 +19,13 @@ class GithubInvalidResponseException implements Exception {
   const GithubInvalidResponseException();
 }
 
+class GithubTokenRefreshException implements Exception {
+  const GithubTokenRefreshException(this.reason);
+  final String reason;
+  @override
+  String toString() => 'GithubTokenRefreshException: $reason';
+}
+
 class GithubActivityFeed {
   const GithubActivityFeed({
     required this.login,
@@ -83,6 +90,53 @@ class GithubService {
         throw const GithubAuthRequiredException();
       }
       throw GithubApiException(int.tryParse(error.code ?? '') ?? 0);
+    }
+  }
+
+  // Supabase Edge Function `refresh-github-token` 을 호출해 GitHub OAuth
+  // access token 을 갱신한다. 함수는 client_secret 을 보관하고 있고,
+  // 클라이언트는 저장해둔 refresh token 만 넘긴다.
+  //
+  // 성공 시 새 access token (+ 있으면 refresh token) 을 SecureStorage 에 덮어쓴다.
+  // 실패 원인은 [GithubTokenRefreshException]으로 감싸서 던진다.
+  Future<void> refreshAccessToken() async {
+    final storage = SecureStorage();
+    final refreshToken = await storage.read(
+      SecureStorageKey.githubRefreshToken,
+    );
+    if (refreshToken == null || refreshToken.isEmpty) {
+      throw const GithubTokenRefreshException('missing_refresh_token');
+    }
+
+    final supabase = Supabase.instance.client;
+    final FunctionResponse response;
+    try {
+      response = await supabase.functions.invoke(
+        'refresh-github-token',
+        body: {'refresh_token': refreshToken},
+      );
+    } on FunctionException catch (error) {
+      throw GithubTokenRefreshException(
+        error.reasonPhrase ?? 'function_error_${error.status}',
+      );
+    }
+
+    if (response.status != 200) {
+      throw GithubTokenRefreshException('bad_status_${response.status}');
+    }
+    final data = response.data;
+    if (data is! Map) {
+      throw const GithubTokenRefreshException('invalid_response_shape');
+    }
+    final newAccess = data['access_token']?.toString();
+    if (newAccess == null || newAccess.isEmpty) {
+      throw const GithubTokenRefreshException('access_token_missing');
+    }
+    final newRefresh = data['refresh_token']?.toString();
+
+    await storage.write(SecureStorageKey.githubAccessToken, newAccess);
+    if (newRefresh != null && newRefresh.isNotEmpty) {
+      await storage.write(SecureStorageKey.githubRefreshToken, newRefresh);
     }
   }
 }

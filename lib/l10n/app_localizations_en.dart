@@ -121,6 +121,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLanguageSystem => 'System default';
 
   @override
+  String get homeLanguageKorean => 'Korean';
+
+  @override
+  String get homeLanguageEnglish => 'English';
+
+  @override
   String get homeSettingsLogout => 'Sign out';
 
   @override
@@ -339,6 +345,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendsRemoveConfirmCancel => 'Cancel';
+
+  @override
+  String friendDetailTitle(String username) {
+    return '$username\'s pet';
+  }
+
+  @override
+  String get friendDetailPetLoading => 'Loading pet info…';
+
+  @override
+  String get friendDetailPetError => 'Could not load pet info.';
+
+  @override
+  String get friendDetailPetUnavailable => 'Friend pet info is coming soon.';
+
+  @override
+  String friendDetailPetLevel(int level) {
+    return 'Lv. $level';
+  }
+
+  @override
+  String friendDetailPetStage(int stage) {
+    return 'Evolution stage $stage';
+  }
+
+  @override
+  String friendDetailPetExp(int exp, int nextExp) {
+    return '$exp / $nextExp XP';
+  }
+
+  @override
+  String get friendDetailRetry => 'Try again';
 
   @override
   String get relativeJustNow => 'Just now';

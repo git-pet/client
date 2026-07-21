@@ -1,6 +1,7 @@
 import 'package:client/config/app_locale.dart';
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/pet.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:client/ui/widgets/sheets/app_bottom_sheet.dart';
 import 'package:client/ui/widgets/sheets/language_selector_sheet.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -16,6 +17,7 @@ Future<HomeSettingsAction?> showHomeSettingsSheet(
     context,
     builder: (sheetContext) {
       final theme = Theme.of(sheetContext);
+      final colors = theme.colorScheme;
       final l10n = AppLocalizations.of(sheetContext);
 
       return SafeArea(
@@ -30,7 +32,7 @@ Future<HomeSettingsAction?> showHomeSettingsSheet(
               Text(
                 l10n.homeSettingsTitle,
                 style: theme.textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
+                  color: colors.onSurface,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -38,7 +40,7 @@ Future<HomeSettingsAction?> showHomeSettingsSheet(
               Text(
                 l10n.homeSettingsDescription,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white54,
+                  color: colors.appOnSurfaceSubtle,
                 ),
               ),
               const SizedBox(height: 20),
@@ -47,28 +49,27 @@ Future<HomeSettingsAction?> showHomeSettingsSheet(
                   icon: Icons.pets_rounded,
                   title: l10n.homeSettingsPetChange,
                   subtitle: currentPet.displayName,
-                  onTap: () => Navigator.of(sheetContext).pop(
-                    HomeSettingsAction.changePet,
-                  ),
+                  onTap: () => Navigator.of(
+                    sheetContext,
+                  ).pop(HomeSettingsAction.changePet),
                 ),
-                const Divider(color: Colors.white12),
+                const Divider(),
               ],
               _SettingsTile(
                 icon: Icons.language_rounded,
                 title: l10n.homeSettingsLanguage,
                 subtitle: localeLabel(l10n, AppLocale.notifier.value),
-                onTap: () => Navigator.of(sheetContext).pop(
-                  HomeSettingsAction.changeLanguage,
-                ),
+                onTap: () => Navigator.of(
+                  sheetContext,
+                ).pop(HomeSettingsAction.changeLanguage),
               ),
-              const Divider(color: Colors.white12),
+              const Divider(),
               _SettingsTile(
                 icon: Icons.logout_rounded,
                 title: l10n.homeSettingsLogout,
                 subtitle: l10n.homeSettingsLogoutDescription,
-                onTap: () => Navigator.of(sheetContext).pop(
-                  HomeSettingsAction.logout,
-                ),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(HomeSettingsAction.logout),
               ),
             ],
           ),
@@ -94,6 +95,7 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       leading: Container(
@@ -107,18 +109,18 @@ class _SettingsTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
+        style: textTheme.titleSmall?.copyWith(
+          color: colors.onSurface,
           fontWeight: FontWeight.w700,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(color: Colors.white54),
+        style: textTheme.bodySmall?.copyWith(color: colors.appOnSurfaceSubtle),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_right_rounded,
-        color: Colors.white38,
+        color: colors.appOnSurfaceFaint,
       ),
       onTap: onTap,
     );

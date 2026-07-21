@@ -47,6 +47,8 @@
   "homeSettingsLanguageDescription": "Choose your app language.",
   "homeLanguageSelectorTitle": "Select language",
   "homeLanguageSystem": "System default",
+  "homeLanguageKorean": "Korean",
+  "homeLanguageEnglish": "English",
   "homeSettingsLogout": "Sign out",
   "homeSettingsLogoutDescription": "Disconnect the linked GitHub account.",
   "homePetSelectorTitle": "Choose a pet (Debug)",
@@ -188,6 +190,30 @@
   },
   "friendsRemoveConfirmAccept": "Remove",
   "friendsRemoveConfirmCancel": "Cancel",
+
+  "friendDetailTitle": "{username}'s pet",
+  "@friendDetailTitle": {
+    "placeholders": { "username": { "type": "String" } }
+  },
+  "friendDetailPetLoading": "Loading pet info…",
+  "friendDetailPetError": "Could not load pet info.",
+  "friendDetailPetUnavailable": "Friend pet info is coming soon.",
+  "friendDetailPetLevel": "Lv. {level}",
+  "@friendDetailPetLevel": {
+    "placeholders": { "level": { "type": "int" } }
+  },
+  "friendDetailPetStage": "Evolution stage {stage}",
+  "@friendDetailPetStage": {
+    "placeholders": { "stage": { "type": "int" } }
+  },
+  "friendDetailPetExp": "{exp} / {nextExp} XP",
+  "@friendDetailPetExp": {
+    "placeholders": {
+      "exp": { "type": "int" },
+      "nextExp": { "type": "int" }
+    }
+  },
+  "friendDetailRetry": "Try again",
 
   "relativeJustNow": "Just now",
   "relativeMinutes": "{minutes, plural, =1{1 minute ago} other{{minutes} minutes ago}}",
