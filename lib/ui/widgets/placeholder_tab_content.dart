@@ -1,4 +1,5 @@
 import 'package:client/l10n/app_localizations.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class PlaceholderTabContent extends StatelessWidget {
@@ -16,6 +17,7 @@ class PlaceholderTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
@@ -30,7 +32,7 @@ class PlaceholderTabContent extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(
-                color: Colors.white,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -40,7 +42,7 @@ class PlaceholderTabContent extends StatelessWidget {
                 l10n.homeTabPlaceholder(label),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white60,
+                  color: colors.appOnSurfaceSubtle,
                   height: 1.5,
                 ),
               ),

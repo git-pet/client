@@ -1,4 +1,5 @@
 import 'package:client/l10n/app_localizations.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -20,9 +21,9 @@ class HomeHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: colors.appPanelSurface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: colors.appPanelBorder),
       ),
       child: Row(
         children: [
@@ -40,7 +41,7 @@ class HomeHeader extends StatelessWidget {
             child: Text(
               l10n.homeAppTitle,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -50,8 +51,8 @@ class HomeHeader extends StatelessWidget {
             style: IconButton.styleFrom(
               minimumSize: const Size(38, 38),
               padding: EdgeInsets.zero,
-              backgroundColor: Colors.white.withValues(alpha: 0.04),
-              foregroundColor: Colors.white70,
+              backgroundColor: colors.appSofterSurface,
+              foregroundColor: colors.appOnSurfaceMuted,
             ),
             icon: isLoggingOut
                 ? const SizedBox(

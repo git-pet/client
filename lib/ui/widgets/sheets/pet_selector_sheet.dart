@@ -1,5 +1,6 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/pet.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:client/ui/widgets/sheets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -33,7 +34,7 @@ Future<PetType?> showPetSelectorSheet(
                   Text(
                     l10n.homePetSelectorTitle,
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
+                      color: colors.onSurface,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -63,19 +64,21 @@ Future<PetType?> showPetSelectorSheet(
                               Icons.pets_rounded,
                               color: selected
                                   ? colors.primary
-                                  : Colors.white54,
+                                  : colors.appOnSurfaceSubtle,
                             ),
                           ),
                           title: Text(
                             pet.displayName,
                             style: TextStyle(
-                              color: selected ? colors.primary : Colors.white,
+                              color: selected
+                                  ? colors.primary
+                                  : colors.onSurface,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           subtitle: Text(
                             '${pet.frameSize}px',
-                            style: const TextStyle(color: Colors.white38),
+                            style: TextStyle(color: colors.appOnSurfaceFaint),
                           ),
                           trailing: selected
                               ? Icon(
