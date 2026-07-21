@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:client/config/app_env.dart';
 import 'package:client/l10n/app_localizations.dart';
+import 'package:client/services/activity_service.dart';
+import 'package:client/ui/theme/app_theme.dart';
 import 'package:client/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -23,6 +25,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       AppEnv.supabaseRedirectUrl.isNotEmpty;
 
   SupabaseClient? _supabase;
+  final ActivityService _activityService = ActivityService();
   StreamSubscription<AuthState>? _authSubscription;
   Timer? _oauthResumeTimer;
   Timer? _oauthFailureTimer;
@@ -64,6 +67,12 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 : l10n.loginStatusSignedIn(_displayLogin(_currentUser!));
           });
           _notifyLoginSuccessIfNeeded();
+          // tokenRefreshed / userUpdated 는 이미 진행 중인 세션의 부가 이벤트라
+          // 백필 트리거로 부적절. 매 로그인 성공(첫 로그인 or 세션 복구)마다만
+          // fire-and-forget 으로 호출한다. 서버가 backfilled_at 로 no-op 처리.
+          if (data.event == AuthChangeEvent.signedIn) {
+            unawaited(_backfillActivities());
+          }
           break;
         case AuthChangeEvent.signedOut:
           await _clearStoredUser();
@@ -241,6 +250,17 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   Future<void> _clearStoredUser() => SecureStorage().clearGithubCredentials();
 
+  // 로그인 성공 직후 신규 유저 GitHub 활동 백필. 서비스가 지수 백오프로
+  // 재시도까지 처리하므로 여기선 최종 실패만 조용히 삼킨다. UI 흐름과
+  // 무관하게 fire-and-forget.
+  Future<void> _backfillActivities() async {
+    try {
+      await _activityService.backfillUserActivities();
+    } catch (_) {
+      // 다음 로그인 세션에서 재시도된다 (서버 idempotent).
+    }
+  }
+
   String _displayLogin(User user) {
     final metadata = user.userMetadata ?? <String, dynamic>{};
     return (metadata['user_name'] ??
@@ -271,6 +291,12 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     final user = _currentUser;
     final login = user == null ? null : _displayLogin(user);
     final name = user == null ? null : _displayName(user);
+    final githubButtonBackground = theme.brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF1B1F23);
+    final githubButtonForeground = theme.brightness == Brightness.dark
+        ? const Color(0xFF1B1F23)
+        : Colors.white;
 
     return Scaffold(
       body: Center(
@@ -280,11 +306,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: colors.appPanelSurface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              border: Border.all(color: colors.appPanelBorder),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -301,14 +325,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                   l10n.appTitle,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: colors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   l10n.loginTagline,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white38,
+                    color: colors.appOnSurfaceFaint,
                   ),
                 ),
 
@@ -320,7 +344,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: colors.appSoftSurface,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -328,7 +352,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                         FaIcon(
                           FontAwesomeIcons.github,
                           size: 24,
-                          color: Colors.white70,
+                          color: colors.appOnSurfaceMuted,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -339,14 +363,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                                 login ?? '',
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: colors.onSurface,
                                 ),
                               ),
                               if (name != null)
                                 Text(
                                   name,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white38,
+                                    color: colors.appOnSurfaceFaint,
                                   ),
                                 ),
                             ],
@@ -385,20 +409,22 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                         ? null
                         : _signInWithGithub,
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF1B1F23),
-                      disabledBackgroundColor: Colors.white24,
+                      backgroundColor: githubButtonBackground,
+                      foregroundColor: githubButtonForeground,
+                      disabledBackgroundColor: colors.onSurface.withValues(
+                        alpha: 0.12,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: _isSubmitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Color(0xFF1B1F23),
+                              color: githubButtonForeground,
                             ),
                           )
                         : Row(
@@ -407,7 +433,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                               FaIcon(
                                 FontAwesomeIcons.github,
                                 size: 20,
-                                color: const Color(0xFF1B1F23),
+                                color: githubButtonForeground,
                               ),
                               const SizedBox(width: 10),
                               Text(
@@ -427,7 +453,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                   Text(
                     _statusMessage!,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white30,
+                      color: colors.appOnSurfaceFaint,
                     ),
                   ),
                 ],

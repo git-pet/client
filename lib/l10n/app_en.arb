@@ -47,6 +47,8 @@
   "homeSettingsLanguageDescription": "Choose your app language.",
   "homeLanguageSelectorTitle": "Select language",
   "homeLanguageSystem": "System default",
+  "homeLanguageKorean": "Korean",
+  "homeLanguageEnglish": "English",
   "homeSettingsLogout": "Sign out",
   "homeSettingsLogoutDescription": "Disconnect the linked GitHub account.",
   "homePetSelectorTitle": "Choose a pet (Debug)",
@@ -210,7 +212,7 @@
   },
   "friendDetailPetLoading": "Loading pet info…",
   "friendDetailPetError": "Could not load pet info.",
-  "friendDetailPetUnavailable": "Friend pet info is coming soon.",
+  "friendDetailPetPrivate": "This friend's pet room is private.",
   "friendDetailPetLevel": "Lv. {level}",
   "@friendDetailPetLevel": {
     "placeholders": { "level": { "type": "int" } }

@@ -1,6 +1,7 @@
 import 'package:client/models/friend.dart';
 import 'package:client/models/friend_activity.dart';
 import 'package:client/models/friend_pet_state.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FriendsAuthRequiredException implements Exception {
@@ -233,12 +234,40 @@ class FriendsService {
     }
   }
 
-  // TODO(social): code kim이 배포할 친구 펫 상태 조회 Edge Function
-  //  이름/응답 스키마가 확정되면 supabase.functions.invoke(...)로 교체하고
-  //  FriendPetState.fromJson으로 파싱해 반환한다.
-  //  스키마 확정 전에는 이 예외를 던져 UI가 "곧 지원됩니다" 상태를 표시한다.
-  Future<FriendPetState> loadFriendPetState(String friendUserId) async {
-    throw const FriendPetStateUnavailableException();
+  // friends-pets Edge Function 호출.
+  //   응답 스키마: { friends: [{ user_id, nickname, avatar,
+  //     level, exp, leveled_up, evolved, new_stage }] }
+  //   room_visibility='private' 인 친구는 서버 단에서 제외된다.
+  //   accepted 친구지만 응답 배열엔 없는 케이스가 있을 수 있으므로,
+  //   호출부는 user_id 매칭이 실패해도 정상 흐름으로 처리해야 한다.
+  //
+  // TODO(profile): public.users.room_visibility 값을 사용자가 직접 바꿀
+  //   경로가 아직 없다. RLS 는 본인 UPDATE 를 허용하므로 프로필 편집 화면이
+  //   붙는 시점에 setRoomVisibility(RoomVisibility v) 같은 메서드를 이 서비스
+  //   또는 별도 UserService 에 추가할 것. 지금은 신규 유저 기본값 'public'
+  //   이라 friends-pets 응답에서 private 로 필터링되는 케이스가 실서비스
+  //   흐름에선 발생하지 않는다 (Studio 수동 UPDATE 로만 재현 가능).
+  Future<FriendsPetsResponse> loadFriendsPets() async {
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'friends-pets',
+        method: HttpMethod.get,
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return FriendsPetsResponse.fromJson(data);
+      }
+      return const FriendsPetsResponse(friends: []);
+    } on AuthException {
+      throw const FriendsAuthRequiredException();
+    } on FunctionException catch (error) {
+      if (error.status == 401) {
+        throw const FriendsAuthRequiredException();
+      }
+      throw FriendsServiceException(
+        error.details?.toString() ?? 'friends-pets 호출 실패 (${error.status})',
+      );
+    }
   }
 
   // 보낸 요청 취소 / 친구 삭제 — row 자체를 삭제.

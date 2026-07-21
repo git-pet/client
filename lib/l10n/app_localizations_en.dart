@@ -121,6 +121,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLanguageSystem => 'System default';
 
   @override
+  String get homeLanguageKorean => 'Korean';
+
+  @override
+  String get homeLanguageEnglish => 'English';
+
+  @override
   String get homeSettingsLogout => 'Sign out';
 
   @override
@@ -388,7 +394,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendDetailPetError => 'Could not load pet info.';
 
   @override
-  String get friendDetailPetUnavailable => 'Friend pet info is coming soon.';
+  String get friendDetailPetPrivate => 'This friend\'s pet room is private.';
 
   @override
   String friendDetailPetLevel(int level) {

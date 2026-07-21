@@ -1,57 +1,76 @@
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/friend.dart';
-import 'package:client/models/friend_pet_state.dart';
+import 'package:client/models/pet_state.dart';
 import 'package:client/services/friends_service.dart';
 import 'package:client/ui/widgets/friend_pet_card.dart';
 import 'package:flutter/material.dart';
 
 class FriendDetailPage extends StatefulWidget {
-  const FriendDetailPage({super.key, required this.friendship});
+  const FriendDetailPage({
+    super.key,
+    required this.friendship,
+    this.pet,
+  });
 
   final Friendship friendship;
+  // FriendsTab이 loadFriendsPets 배치 응답에서 뽑아 넘겨준다.
+  // room_visibility='private' 인 친구는 서버가 응답에서 아예 제외하므로,
+  // accepted 관계지만 null 로 들어올 수 있다.
+  final FriendPetEntry? pet;
 
   @override
   State<FriendDetailPage> createState() => _FriendDetailPageState();
 }
 
-// 상세 화면의 펫 카드 영역 상태.
-// - loading: 초기 진입 / 재시도 중.
-// - unavailable: FriendPetStateUnavailableException — Edge Function 미배포 상태.
-// - error: 그 외 예외. errorMessage로 표시.
-// - ready: state != null 일 때만 카드 렌더.
-enum _PetLoadStatus { loading, unavailable, error, ready }
+// - loading: pull-to-refresh 중.
+// - ready: pet 있음.
+// - private: friends-pets 응답에 없음 (= room_visibility private).
+// - error: 재로드 실패.
+enum _PetLoadStatus { loading, ready, private, error }
 
 class _FriendDetailPageState extends State<FriendDetailPage> {
   final FriendsService _service = FriendsService();
 
-  _PetLoadStatus _status = _PetLoadStatus.loading;
-  FriendPetState? _petState;
+  late _PetLoadStatus _status;
+  PetState? _petState;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _petState = widget.pet?.pet;
+    _status =
+        _petState != null ? _PetLoadStatus.ready : _PetLoadStatus.private;
   }
 
-  Future<void> _load() async {
+  Future<void> _refresh() async {
     if (!mounted) return;
     setState(() {
       _status = _PetLoadStatus.loading;
       _errorMessage = null;
     });
     try {
-      final state = await _service.loadFriendPetState(
-        widget.friendship.otherUser.id,
-      );
+      final response = await _service.loadFriendsPets();
+      if (!mounted) return;
+      final friendId = widget.friendship.otherUser.id;
+      FriendPetEntry? entry;
+      for (final e in response.friends) {
+        if (e.userId == friendId) {
+          entry = e;
+          break;
+        }
+      }
+      setState(() {
+        _petState = entry?.pet;
+        _status =
+            entry != null ? _PetLoadStatus.ready : _PetLoadStatus.private;
+      });
+    } on FriendsAuthRequiredException {
       if (!mounted) return;
       setState(() {
-        _petState = state;
-        _status = _PetLoadStatus.ready;
+        _status = _PetLoadStatus.error;
+        _errorMessage = AppLocalizations.of(context).homeSessionExpired;
       });
-    } on FriendPetStateUnavailableException {
-      if (!mounted) return;
-      setState(() => _status = _PetLoadStatus.unavailable);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -73,7 +92,7 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _load,
+          onRefresh: _refresh,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
             children: [
@@ -105,19 +124,23 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
             ],
           ),
         );
-      case _PetLoadStatus.unavailable:
+      case _PetLoadStatus.private:
+        // TODO(profile): 이 분기는 서버 필터(room_visibility='private') 결과지만
+        //   지금은 사용자가 자기 값을 바꿀 수단이 앱에 없다. 프로필 편집
+        //   화면 붙는 시점에 friends_service.dart 의 TODO(profile) 와 함께
+        //   실서비스 흐름으로 트리거 가능해진다.
         return _PetSectionShell(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.hourglass_bottom_rounded,
+                Icons.lock_outline_rounded,
                 color: theme.colorScheme.primary,
                 size: 32,
               ),
               const SizedBox(height: 12),
               Text(
-                l10n.friendDetailPetUnavailable,
+                l10n.friendDetailPetPrivate,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.white70,
@@ -151,18 +174,15 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
               ],
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: _load,
+                onPressed: _refresh,
                 child: Text(l10n.friendDetailRetry),
               ),
             ],
           ),
         );
       case _PetLoadStatus.ready:
-        // ready 상태에서만 _petState는 non-null 이지만, 방어적으로 재확인.
         final state = _petState;
-        if (state == null) {
-          return const SizedBox.shrink();
-        }
+        if (state == null) return const SizedBox.shrink();
         return FriendPetCard(state: state);
     }
   }
