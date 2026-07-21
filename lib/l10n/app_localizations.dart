@@ -236,6 +236,12 @@ abstract class AppLocalizations {
   /// **'Friends'**
   String get homeTabFriends;
 
+  /// No description provided for @homeTabFriendFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get homeTabFriendFeed;
+
   /// No description provided for @homeTabExplore.
   ///
   /// In en, this message translates to:
@@ -247,6 +253,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shop'**
   String get homeTabShop;
+
+  /// No description provided for @friendFeedCollapsedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand the tab to load your friends\' recent activity.'**
+  String get friendFeedCollapsedHint;
+
+  /// No description provided for @friendFeedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent activity from your friends yet.'**
+  String get friendFeedEmpty;
+
+  /// No description provided for @friendFeedLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load friend activity.'**
+  String get friendFeedLoadError;
+
+  /// No description provided for @friendFeedRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get friendFeedRetry;
 
   /// No description provided for @homeTabCollapseHint.
   ///

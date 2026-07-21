@@ -31,8 +31,14 @@
 
   "homeTabActivity": "Activity",
   "homeTabFriends": "Friends",
+  "homeTabFriendFeed": "Feed",
   "homeTabExplore": "Explore",
   "homeTabShop": "Shop",
+
+  "friendFeedCollapsedHint": "Expand the tab to load your friends' recent activity.",
+  "friendFeedEmpty": "No recent activity from your friends yet.",
+  "friendFeedLoadError": "Could not load friend activity.",
+  "friendFeedRetry": "Try again",
 
   "homeTabCollapseHint": "Tap this area to collapse the panel.",
   "homeTabPlaceholder": "{tab} content will appear here.",

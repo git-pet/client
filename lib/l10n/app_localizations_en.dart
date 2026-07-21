@@ -85,10 +85,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTabFriends => 'Friends';
 
   @override
+  String get homeTabFriendFeed => 'Feed';
+
+  @override
   String get homeTabExplore => 'Explore';
 
   @override
   String get homeTabShop => 'Shop';
+
+  @override
+  String get friendFeedCollapsedHint =>
+      'Expand the tab to load your friends\' recent activity.';
+
+  @override
+  String get friendFeedEmpty => 'No recent activity from your friends yet.';
+
+  @override
+  String get friendFeedLoadError => 'Could not load friend activity.';
+
+  @override
+  String get friendFeedRetry => 'Try again';
 
   @override
   String get homeTabCollapseHint => 'Tap this area to collapse the panel.';

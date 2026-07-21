@@ -82,10 +82,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeTabFriends => '친구';
 
   @override
+  String get homeTabFriendFeed => '피드';
+
+  @override
   String get homeTabExplore => '탐색';
 
   @override
   String get homeTabShop => '상점';
+
+  @override
+  String get friendFeedCollapsedHint => '탭을 확장하면 친구들의 최근 활동을 불러옵니다.';
+
+  @override
+  String get friendFeedEmpty => '친구들의 최근 활동이 아직 없어요.';
+
+  @override
+  String get friendFeedLoadError => '친구 활동을 불러오지 못했습니다.';
+
+  @override
+  String get friendFeedRetry => '다시 시도';
 
   @override
   String get homeTabCollapseHint => '탭을 접으려면 이 영역을 누르세요.';
