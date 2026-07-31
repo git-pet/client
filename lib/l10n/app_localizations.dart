@@ -254,6 +254,96 @@ abstract class AppLocalizations {
   /// **'Stats'**
   String get homeStatsOpen;
 
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet.'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load notifications.'**
+  String get notificationsLoadError;
+
+  /// No description provided for @notificationsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get notificationsRetry;
+
+  /// No description provided for @notificationUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread notification'**
+  String get notificationUnread;
+
+  /// No description provided for @notificationReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not mark the notification as read.'**
+  String get notificationReadFailed;
+
+  /// No description provided for @notificationSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get notificationSomeone;
+
+  /// No description provided for @notificationFriendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} sent you a friend request.'**
+  String notificationFriendRequest(String name);
+
+  /// No description provided for @notificationFriendAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your friend request.'**
+  String notificationFriendAccepted(String name);
+
+  /// No description provided for @notificationLevelUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet reached level {level}!'**
+  String notificationLevelUp(int level);
+
+  /// No description provided for @notificationAchievement.
+  ///
+  /// In en, this message translates to:
+  /// **'You unlocked the {title} achievement.'**
+  String notificationAchievement(String title);
+
+  /// No description provided for @notificationRoomVisited.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} visited your pet room.'**
+  String notificationRoomVisited(String name);
+
+  /// No description provided for @notificationXpGained.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet gained {xp} EXP.'**
+  String notificationXpGained(int xp);
+
+  /// No description provided for @notificationPetEvolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pet evolved to {stage}!'**
+  String notificationPetEvolved(String stage);
+
+  /// No description provided for @notificationGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a new notification.'**
+  String get notificationGeneric;
+
   /// No description provided for @homeTabActivity.
   ///
   /// In en, this message translates to:
