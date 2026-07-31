@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:client/l10n/app_localizations.dart';
 import 'package:client/models/github_activity.dart';
 import 'package:client/models/pet.dart';
 import 'package:client/models/pet_state.dart';
+import 'package:client/screens/notifications/notifications_screen.dart';
 import 'package:client/screens/stats/activity_stats_screen.dart';
 import 'package:client/services/github_service.dart';
+import 'package:client/services/notification_service.dart';
 import 'package:client/services/pet_service.dart';
 import 'package:client/ui/widgets/activity_tab.dart';
 import 'package:client/ui/widgets/friend_feed_tab.dart';
@@ -34,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   static const _expandedTabPanelRatio = 0.6;
 
   final GithubService _githubService = GithubService();
+  final NotificationService _notificationService = const NotificationService();
   final PetService _petService = PetService();
 
   List<String> _tabs(AppLocalizations l10n) => [
@@ -61,6 +66,10 @@ class _HomePageState extends State<HomePage> {
   PetState? _petProgress;
   bool _isLoadingPetProgress = true;
   String? _petProgressError;
+  int _notificationCount = 0;
+  String? _latestNotificationId;
+  bool _hasNotificationBaseline = false;
+  Timer? _notificationTimer;
 
   SpriteInfo get _sprite => petSprites[_petType]![_mood]!;
 
@@ -68,6 +77,18 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _refreshHomeData();
+    _refreshNotifications();
+    // ponytail: 30초 폴링. 즉시성이 필요해지면 notifications Realtime 구독으로 교체.
+    _notificationTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _refreshNotifications(showToast: true),
+    );
+  }
+
+  @override
+  void dispose() {
+    _notificationTimer?.cancel();
+    super.dispose();
   }
 
   // pet-progress GET 은 조회 전용. XP 적용은 서버 webhook 경로가 담당한다.
@@ -259,6 +280,50 @@ class _HomePageState extends State<HomePage> {
     ).push(MaterialPageRoute(builder: (_) => const ActivityStatsScreen()));
   }
 
+  Future<void> _openNotifications() async {
+    final destination = await Navigator.of(context)
+        .push<NotificationDestination>(
+          MaterialPageRoute(
+            builder: (_) => NotificationsScreen(service: _notificationService),
+          ),
+        );
+    if (!mounted) return;
+    await _refreshNotifications();
+    if (destination == NotificationDestination.friends) {
+      _selectTab(1);
+    } else if (destination == NotificationDestination.home) {
+      _collapseTabPanel();
+    }
+  }
+
+  Future<void> _refreshNotifications({bool showToast = false}) async {
+    try {
+      final countFuture = _notificationService.loadUnreadCount();
+      final unreadFuture = _notificationService.loadNotifications(
+        unreadOnly: true,
+        limit: 1,
+      );
+      final count = await countFuture;
+      final unread = await unreadFuture;
+      if (!mounted) return;
+      final latest = unread.isEmpty ? null : unread.first;
+      final isNew =
+          _hasNotificationBaseline &&
+          latest != null &&
+          latest.id != _latestNotificationId;
+
+      setState(() => _notificationCount = count);
+      _latestNotificationId = latest?.id;
+      _hasNotificationBaseline = true;
+
+      if (showToast && isNew) {
+        showNotificationToast(context, latest, onTap: _openNotifications);
+      }
+    } catch (_) {
+      // 알림 실패가 홈 화면 로드를 막지 않도록 기존 뱃지를 유지한다.
+    }
+  }
+
   void _selectTab(int index) {
     setState(() {
       _selectedTabIndex = index;
@@ -307,7 +372,9 @@ class _HomePageState extends State<HomePage> {
             children: [
               HomeHeader(
                 isLoggingOut: _isLoggingOut,
+                notificationCount: _notificationCount,
                 onOpenStats: _openStats,
+                onOpenNotifications: _openNotifications,
                 onOpenSettings: _openSettings,
               ),
               const SizedBox(height: 10),

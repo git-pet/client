@@ -34,6 +34,43 @@
   "homePetProgressRetry": "Try again",
   "homeStatsOpen": "Stats",
 
+  "notificationsTitle": "Notifications",
+  "notificationsEmpty": "No notifications yet.",
+  "notificationsLoadError": "Could not load notifications.",
+  "notificationsRetry": "Try again",
+  "notificationUnread": "Unread notification",
+  "notificationReadFailed": "Could not mark the notification as read.",
+  "notificationSomeone": "Someone",
+  "notificationFriendRequest": "{name} sent you a friend request.",
+  "@notificationFriendRequest": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "notificationFriendAccepted": "{name} accepted your friend request.",
+  "@notificationFriendAccepted": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "notificationLevelUp": "Your pet reached level {level}!",
+  "@notificationLevelUp": {
+    "placeholders": { "level": { "type": "int" } }
+  },
+  "notificationAchievement": "You unlocked the {title} achievement.",
+  "@notificationAchievement": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "notificationRoomVisited": "{name} visited your pet room.",
+  "@notificationRoomVisited": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "notificationXpGained": "Your pet gained {xp} EXP.",
+  "@notificationXpGained": {
+    "placeholders": { "xp": { "type": "int" } }
+  },
+  "notificationPetEvolved": "Your pet evolved to {stage}!",
+  "@notificationPetEvolved": {
+    "placeholders": { "stage": { "type": "String" } }
+  },
+  "notificationGeneric": "You have a new notification.",
+
   "homeTabActivity": "Activity",
   "homeTabFriends": "Friends",
   "homeTabFriendFeed": "Feed",

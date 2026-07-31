@@ -6,12 +6,16 @@ class HomeHeader extends StatelessWidget {
   const HomeHeader({
     super.key,
     required this.isLoggingOut,
+    required this.notificationCount,
     required this.onOpenStats,
+    required this.onOpenNotifications,
     required this.onOpenSettings,
   });
 
   final bool isLoggingOut;
+  final int notificationCount;
   final VoidCallback onOpenStats;
+  final VoidCallback onOpenNotifications;
   final Future<void> Function() onOpenSettings;
 
   @override
@@ -62,6 +66,22 @@ class HomeHeader extends StatelessWidget {
               l10n.homeStatsOpen,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Badge(
+            isLabelVisible: notificationCount > 0,
+            label: Text(notificationCount > 99 ? '99+' : '$notificationCount'),
+            child: IconButton(
+              tooltip: l10n.notificationsTitle,
+              onPressed: isLoggingOut ? null : onOpenNotifications,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(38, 38),
+                padding: EdgeInsets.zero,
+                backgroundColor: colors.appSofterSurface,
+                foregroundColor: colors.appOnSurfaceMuted,
+              ),
+              icon: const Icon(Icons.notifications_none_rounded),
             ),
           ),
           const SizedBox(width: 8),

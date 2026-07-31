@@ -91,6 +91,65 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeStatsOpen => '통계 보기';
 
   @override
+  String get notificationsTitle => '알림';
+
+  @override
+  String get notificationsEmpty => '아직 알림이 없습니다.';
+
+  @override
+  String get notificationsLoadError => '알림을 불러오지 못했습니다.';
+
+  @override
+  String get notificationsRetry => '다시 시도';
+
+  @override
+  String get notificationUnread => '읽지 않은 알림';
+
+  @override
+  String get notificationReadFailed => '알림을 읽음 처리하지 못했습니다.';
+
+  @override
+  String get notificationSomeone => '누군가';
+
+  @override
+  String notificationFriendRequest(String name) {
+    return '$name님이 친구 요청을 보냈어요.';
+  }
+
+  @override
+  String notificationFriendAccepted(String name) {
+    return '$name님이 친구 요청을 수락했어요.';
+  }
+
+  @override
+  String notificationLevelUp(int level) {
+    return '펫이 레벨 $level이 되었어요!';
+  }
+
+  @override
+  String notificationAchievement(String title) {
+    return '$title 업적을 달성했어요.';
+  }
+
+  @override
+  String notificationRoomVisited(String name) {
+    return '$name님이 펫 룸을 방문했어요.';
+  }
+
+  @override
+  String notificationXpGained(int xp) {
+    return '펫이 EXP $xp를 획득했어요.';
+  }
+
+  @override
+  String notificationPetEvolved(String stage) {
+    return '펫이 $stage 단계로 진화했어요!';
+  }
+
+  @override
+  String get notificationGeneric => '새로운 알림이 도착했어요.';
+
+  @override
   String get homeTabActivity => '활동내역';
 
   @override

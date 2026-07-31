@@ -94,6 +94,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStatsOpen => 'Stats';
 
   @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty => 'No notifications yet.';
+
+  @override
+  String get notificationsLoadError => 'Could not load notifications.';
+
+  @override
+  String get notificationsRetry => 'Try again';
+
+  @override
+  String get notificationUnread => 'Unread notification';
+
+  @override
+  String get notificationReadFailed =>
+      'Could not mark the notification as read.';
+
+  @override
+  String get notificationSomeone => 'Someone';
+
+  @override
+  String notificationFriendRequest(String name) {
+    return '$name sent you a friend request.';
+  }
+
+  @override
+  String notificationFriendAccepted(String name) {
+    return '$name accepted your friend request.';
+  }
+
+  @override
+  String notificationLevelUp(int level) {
+    return 'Your pet reached level $level!';
+  }
+
+  @override
+  String notificationAchievement(String title) {
+    return 'You unlocked the $title achievement.';
+  }
+
+  @override
+  String notificationRoomVisited(String name) {
+    return '$name visited your pet room.';
+  }
+
+  @override
+  String notificationXpGained(int xp) {
+    return 'Your pet gained $xp EXP.';
+  }
+
+  @override
+  String notificationPetEvolved(String stage) {
+    return 'Your pet evolved to $stage!';
+  }
+
+  @override
+  String get notificationGeneric => 'You have a new notification.';
+
+  @override
   String get homeTabActivity => 'Activity';
 
   @override
