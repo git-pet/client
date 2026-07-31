@@ -99,15 +99,23 @@ class ActivityService {
 
   Future<ActivityStats> loadActivityStats() async {
     try {
-      final response = await Supabase.instance.client.functions.invoke(
-        'activity-stats',
-        method: HttpMethod.get,
-      );
-      final data = response.data;
-      if (data is Map<String, dynamic>) {
-        return ActivityStats.fromJson(data);
+      final responses = await Future.wait([
+        for (final path in const ['daily', 'weekly', 'breakdown'])
+          Supabase.instance.client.functions.invoke(
+            'activity-stats/$path',
+            method: HttpMethod.get,
+          ),
+      ]);
+      final merged = <String, dynamic>{};
+      for (final response in responses) {
+        final json = response.data;
+        if (json is! Map<String, dynamic>) {
+          throw const ActivityServiceException('activity-stats 응답 형식 오류');
+        }
+        final data = json['data'];
+        merged.addAll(data is Map ? Map<String, dynamic>.from(data) : json);
       }
-      throw const ActivityServiceException('activity-stats 응답 형식 오류');
+      return ActivityStats.fromJson(merged);
     } on AuthException {
       throw const ActivityAuthRequiredException();
     } on FunctionException catch (error) {
