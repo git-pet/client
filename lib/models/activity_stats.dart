@@ -25,7 +25,10 @@ class ActivityStats {
         const ['week_start', 'week', 'date', 'period'],
       ),
       events: _events(
-        source['events'] ?? source['event_types'] ?? source['by_event'],
+        source['breakdown'] ??
+            source['events'] ??
+            source['event_types'] ??
+            source['by_event'],
       ),
     );
   }
